@@ -1,7 +1,8 @@
 """CoderAI: local GGUF inference with persistent personalization."""
 import json, os, shutil, threading, time, urllib.request, uuid
 from pathlib import Path
-from flask import Flask, Response, jsonify, render_template, request, send_file\nfrom werkzeug.utils import secure_filename
+from flask import Flask, Response, jsonify, render_template, request, send_file
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
