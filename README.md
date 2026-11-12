@@ -27,6 +27,10 @@ Important : les retours et notes ne modifient pas les poids du modèle. Ils pers
 
 Railway Free indique actuellement 0,5 GB RAM par service et 0,5 GB de volume. Le modèle et son runtime peuvent dépasser la RAM disponible : le déploiement doit être testé et peut nécessiter une réduction du contexte. Le budget zéro n'est pas garanti au-delà des crédits gratuits. Voir https://railway.com/pricing.
 
+## Continue
+
+Le fichier `.continue/config.yaml` configure le véritable client Continue pour utiliser le endpoint OpenAI-compatible de CoderAI (`/v1/chat/completions`). Le serveur expose aussi `/v1/models`. Dans Continue, importe ce fichier de configuration après le déploiement. Continue est le client/agent de code ; les poids du modèle restent ceux de SmolLM2.
+
 ## API
 - GET / interface ; GET /health état du modèle.
 - POST /api/generate avec { "prompt": "..." }.
