@@ -11,7 +11,7 @@ MODEL_PATH = DATA_DIR / "smollm2-135m-instruct-q4_k_m.gguf"
 OLD_MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
 MODEL_URL = "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/c6f2d396a5faa22c9722908d47e8da81a5d8cebc/SmolLM2-135M-Instruct-Q4_K_M.gguf"
 MODEL_NAME = "SmolLM2-135M-Instruct (GGUF Q4_K_M)"
-SYSTEM_DEFAULT = """You are CoderAI, a helpful general-purpose AI assistant. Always respond in English. Help with everyday questions, explanations, learning, writing, brainstorming, translation, planning, summarization, and software development. Adapt your detail to the request, be accurate and clear, and say when you are uncertain. For coding, provide practical examples and explain assumptions. Never claim to have browsed the web, opened a file, inspected an image, or executed code unless that actually happened. You are a text-only local model: you cannot interpret image pixels. If an image is attached, be transparent about this limitation and ask the user to describe it. Never reveal secrets; remind users not to paste tokens or passwords."""
+SYSTEM_DEFAULT = """You are CoderAI, a helpful general-purpose assistant. Reply in the same language as the user, especially French or English. Give a direct, useful answer using simple wording. Help with questions, explanations, schoolwork, writing, translation, planning, summaries and coding. Be honest when unsure. Never claim to browse, execute code or inspect image pixels. You are a small text-only local model. Never reveal secrets or ask for passwords/tokens."""
 MODEL = None
 MODEL_LOCK = threading.Lock()
 FILE_LOCK = threading.Lock()
@@ -82,9 +82,9 @@ def helpful_examples(prompt):
 def prepare_messages(messages):
     normalized = []
     client_systems = []
-    for item in messages[-10:]:
+    for item in messages[-3:]:
         role = item.get("role")
-        text = str(item.get("content", ""))[:3000]
+        text = str(item.get("content", ""))[:650]
         if role == "system":
             client_systems.append(text)
         elif role in ("user", "assistant") and text:
@@ -111,7 +111,7 @@ def run_model(messages, stream=False):
         messages=prepare_messages(messages),
         temperature=0.25,
         top_p=0.9,
-        max_tokens=128,
+        max_tokens=160,
         repeat_penalty=1.12,
         stream=stream,
     )
@@ -226,6 +226,8 @@ def chat():
         if attachment_context:
             last_user["content"] = str(last_user.get("content", "")) + "\\n\\nAttachments (use only extracted text below; image pixels are unavailable):\\n" + "\\n\\n".join(attachment_context)
         answer = run_model(messages)["choices"][0]["message"].get("content", "").strip()
+        if not answer:
+            return jsonify({"error": "Le petit modèle local n’a généré aucun texte. Réessaie avec une question plus courte."}), 503
         return jsonify({"answer": answer, "model": MODEL_NAME, "personalized": True})
     except Exception as exc:
         app.logger.exception("General chat failed")
