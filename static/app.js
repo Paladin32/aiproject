@@ -1,65 +1,13 @@
-const promptBox = document.querySelector("#prompt");
-const generateButton = document.querySelector("#generate");
-const output = document.querySelector("#output");
-const errorBox = document.querySelector("#error");
-const copyButton = document.querySelector("#copy");
-const resultBox = document.querySelector("#result");
-
-promptBox.addEventListener("input", () => {
-  document.querySelector("#counter").textContent = `${promptBox.value.length} / 2000`;
-});
-
-document.querySelectorAll("[data-prompt]").forEach(button => {
-  button.addEventListener("click", () => {
-    promptBox.value = button.dataset.prompt;
-    promptBox.dispatchEvent(new Event("input"));
-    promptBox.focus();
-  });
-});
-
-generateButton.addEventListener("click", async () => {
-  errorBox.textContent = "";
-  const prompt = promptBox.value.trim();
-  if (prompt.length < 3) {
-    errorBox.textContent = "Décris ce que tu veux créer.";
-    return;
-  }
-  generateButton.disabled = true;
-  generateButton.textContent = "Traitement…";
-  resultBox.hidden = false;
-  document.querySelector("#result-title").textContent = "Génération en cours…";
-  output.textContent = "";
-  document.querySelector("#explanation").textContent = "";
-  document.querySelector("#steps").replaceChildren();
-  try {
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({prompt})
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Erreur serveur.");
-    document.querySelector("#result-title").textContent = data.title;
-    document.querySelector("#language").textContent = data.language.toUpperCase();
-    document.querySelector("#explanation").textContent = data.explanation;
-    output.textContent = data.code;
-    (data.next_steps || []).forEach(step => {
-      const item = document.createElement("p");
-      item.textContent = "→ " + step;
-      document.querySelector("#steps").append(item);
-    });
-    copyButton.disabled = data.language === "text";
-    resultBox.scrollIntoView({behavior: "smooth", block: "start"});
-  } catch (error) {
-    errorBox.textContent = error.message;
-  } finally {
-    generateButton.disabled = false;
-    generateButton.innerHTML = 'Générer <b>↗</b>';
-  }
-});
-
-copyButton.addEventListener("click", async () => {
-  await navigator.clipboard.writeText(output.textContent);
-  copyButton.textContent = "Copié !";
-  setTimeout(() => copyButton.textContent = "Copier le code", 1400);
-});
+const promptBox=document.querySelector("#prompt"),generateButton=document.querySelector("#generate"),output=document.querySelector("#output"),errorBox=document.querySelector("#error"),resultBox=document.querySelector("#result");
+let lastPrompt="",lastAnswer="";
+promptBox.addEventListener("input",()=>{document.querySelector("#counter").textContent=promptBox.value.length+" / 5000";});
+document.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListener("click",()=>{promptBox.value=button.dataset.prompt;promptBox.dispatchEvent(new Event("input"));promptBox.focus();}));
+async function api(path,options={}){const response=await fetch(path,{headers:{"Content-Type":"application/json"},...options});const data=response.headers.get("content-type")?.includes("application/json")?await response.json():{};if(!response.ok)throw new Error(data.error||"Erreur serveur.");return data;}
+generateButton.addEventListener("click",async()=>{errorBox.textContent="";lastPrompt=promptBox.value.trim();if(lastPrompt.length<2){errorBox.textContent="Écris une demande.";return;}generateButton.disabled=true;generateButton.textContent="Le modèle réfléchit…";resultBox.hidden=false;output.textContent="Chargement du modèle au premier lancement…";try{const data=await api("/api/generate",{method:"POST",body:JSON.stringify({prompt:lastPrompt})});lastAnswer=data.answer;output.textContent=lastAnswer;document.querySelector("#model-status").textContent="Modèle utilisé";resultBox.scrollIntoView({behavior:"smooth",block:"start"});}catch(error){output.textContent="";errorBox.textContent=error.message;}finally{generateButton.disabled=false;generateButton.innerHTML='Envoyer <b>↗</b>'; }});
+document.querySelector("#copy").addEventListener("click",async()=>{await navigator.clipboard.writeText(output.textContent);document.querySelector("#copy").textContent="Copié !";});
+async function sendFeedback(helpful){if(!lastPrompt||!lastAnswer)return;try{await api("/api/feedback",{method:"POST",body:JSON.stringify({prompt:lastPrompt,answer:lastAnswer,helpful})});document.querySelector("#knowledge-status").textContent=helpful?"Exemple positif enregistré pour le futur entraînement.":"Retour enregistré.";}catch(error){errorBox.textContent=error.message;}}
+document.querySelector("#good").addEventListener("click",()=>sendFeedback(true));document.querySelector("#bad").addEventListener("click",()=>sendFeedback(false));
+document.querySelector("#save-persona").addEventListener("click",async()=>{try{await api("/api/persona",{method:"POST",body:JSON.stringify({persona:document.querySelector("#persona").value})});document.querySelector("#knowledge-status").textContent="Personnalité enregistrée.";}catch(error){errorBox.textContent=error.message;}});
+document.querySelector("#save-knowledge").addEventListener("click",async()=>{try{const data=await api("/api/knowledge",{method:"POST",body:JSON.stringify({text:document.querySelector("#knowledge").value})});document.querySelector("#knowledge").value="";document.querySelector("#knowledge-status").textContent=data.count+" connaissance(s) enregistrée(s).";}catch(error){errorBox.textContent=error.message;}});
+api("/api/persona").then(data=>{document.querySelector("#persona").value=data.persona;}).catch(()=>{});
+api("/health").then(data=>{document.querySelector("#model-status").textContent=data.model_loaded?"Modèle chargé":"Modèle prêt à charger";}).catch(()=>{});
