@@ -10,14 +10,13 @@ MODEL_PATH = DATA_DIR / "smollm2-135m-instruct-q4_k_m.gguf"
 OLD_MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
 MODEL_URL = "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/c6f2d396a5faa22c9722908d47e8da81a5d8cebc/SmolLM2-135M-Instruct-Q4_K_M.gguf"
 MODEL_NAME = "SmolLM2-135M-Instruct (GGUF Q4_K_M)"
-SYSTEM_DEFAULT = """Tu es CoderAI, un assistant de programmation indépendant.
-Réponds en français sauf demande contraire. Aide à concevoir, écrire, expliquer,
-corriger et tester du code. Donne des solutions complètes et cohérentes avec les
-versions demandées. Signale les hypothèses, dépendances et limites.
-Ne prétends jamais avoir exécuté du code si ce n'est pas le cas.
-Si une demande manque d'informations, pose une question précise.
-Privilégie Python, JavaScript/TypeScript, HTML/CSS, Node.js et discord.js.
-Ne révèle jamais de secrets et rappelle de ne pas coller de tokens ou mots de passe."""
+SYSTEM_DEFAULT = """You are CoderAI, an independent coding assistant.
+Always respond in English. Help design, write, explain, debug and test code.
+Provide complete, consistent solutions for the requested versions. State assumptions,
+dependencies and limitations clearly. Never claim to have executed code unless you
+actually did. If a request is missing essential details, ask one precise question.
+Prefer Python, JavaScript/TypeScript, HTML/CSS, Node.js and discord.js.
+Never reveal secrets; remind users not to paste tokens or passwords."""
 MODEL = None
 MODEL_LOCK = threading.Lock()
 FILE_LOCK = threading.Lock()
@@ -44,7 +43,7 @@ def download_model():
             shutil.copyfileobj(response, target, length=1024 * 1024)
     if temporary.stat().st_size < 80_000_000:
         temporary.unlink(missing_ok=True)
-        raise RuntimeError("Téléchargement du modèle incomplet.")
+        raise RuntimeError("Model download was incomplete.")
     temporary.replace(MODEL_PATH)
 
 def get_model():
@@ -98,16 +97,16 @@ def prepare_messages(messages):
     last_prompt = next((m["content"] for m in reversed(normalized) if m["role"] == "user"), "")
     system = current_persona()
     if client_systems:
-        system += "\n\nInstructions supplémentaires de Continue :\n" + "\n".join(client_systems)[:3000]
+        system += "\n\nAdditional instructions from Continue:\n" + "\n".join(client_systems)[:3000]
     notes = relevant_knowledge(last_prompt)
     examples = helpful_examples(last_prompt)
     if notes:
-        system += "\n\nConnaissances personnelles :\n" + "\n---\n".join(notes)
+        system += "\n\nPersonal knowledge:\n" + "\n---\n".join(notes)
     if examples:
-        system += "\n\nExemples appréciés :"
+        system += "\n\nHelpful examples:"
         for item in examples:
-            system += "\nDemande : " + item.get("prompt", "")[:500]
-            system += "\nRéponse : " + item.get("answer", "")[:900]
+            system += "\nRequest: " + item.get("prompt", "")[:500]
+            system += "\nAnswer: " + item.get("answer", "")[:900]
     return [{"role": "system", "content": system}] + normalized
 
 
@@ -142,7 +141,7 @@ def openai_chat_completions():
     payload = request.get_json(silent=True) or {}
     messages = payload.get("messages")
     if not isinstance(messages, list) or not messages:
-        return jsonify({"error": {"message": "messages est obligatoire", "type": "invalid_request_error"}}), 400
+        return jsonify({"error": {"message": "messages is required", "type": "invalid_request_error"}}), 400
     model_name = str(payload.get("model", "coderai"))[:100]
     if payload.get("stream"):
         def events():
@@ -184,11 +183,11 @@ def health():
 def generate():
     payload = request.get_json(silent=True) or {}
     prompt = str(payload.get("prompt","")).strip()[:5000]
-    if len(prompt) < 2: return jsonify({"error":"Écris une demande plus précise."}), 400
+    if len(prompt) < 2: return jsonify({"error":"Please enter a more specific request."}), 400
     try: return jsonify({"answer":generate_answer(prompt),"model":MODEL_NAME,"personalized":True})
     except Exception as exc:
         app.logger.exception("Échec de génération")
-        return jsonify({"error":"Le modèle n'a pas pu démarrer. Vérifie les logs Railway.",
+        return jsonify({"error":"The model could not start. Check the Railway logs.",
                         "detail":str(exc)[:300]}), 503
 
 @app.get("/api/persona")
@@ -198,7 +197,7 @@ def get_persona(): return jsonify({"persona":current_persona()})
 def set_persona():
     payload = request.get_json(silent=True) or {}
     persona = str(payload.get("persona","")).strip()[:4000]
-    if len(persona) < 20: return jsonify({"error":"La personnalité doit contenir au moins 20 caractères."}), 400
+    if len(persona) < 20: return jsonify({"error":"Instructions must contain at least 20 characters."}), 400
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     (DATA_DIR/"persona.txt").write_text(persona, "utf-8")
     return jsonify({"ok":True})
@@ -210,7 +209,7 @@ def get_knowledge(): return jsonify({"items":read_json(DATA_DIR/"knowledge.json"
 def add_knowledge():
     payload = request.get_json(silent=True) or {}
     note = str(payload.get("text","")).strip()[:3000]
-    if len(note) < 10: return jsonify({"error":"Ajoute au moins 10 caractères."}), 400
+    if len(note) < 10: return jsonify({"error":"Please add at least 10 characters."}), 400
     path = DATA_DIR/"knowledge.json"
     with FILE_LOCK:
         items = read_json(path, [])
@@ -232,7 +231,7 @@ def feedback():
     payload = request.get_json(silent=True) or {}
     prompt = str(payload.get("prompt","")).strip()[:2000]
     answer = str(payload.get("answer","")).strip()[:4000]
-    if not prompt or not answer: return jsonify({"error":"Exemple incomplet."}), 400
+    if not prompt or not answer: return jsonify({"error":"Incomplete example."}), 400
     path = DATA_DIR/"feedback.json"
     with FILE_LOCK:
         items = read_json(path, [])
