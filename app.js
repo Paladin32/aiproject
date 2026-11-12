@@ -8,12 +8,12 @@ const modelSelect = document.getElementById("modelSelect");
 const reloadBtn = document.getElementById("reloadBtn");
 const clearBtn = document.getElementById("clearBtn");
 const progressBar = document.getElementById("progressBar");
+const emptyState = document.getElementById("emptyState");
 
 let engine = null;
 let history = [];
 let isGenerating = false;
 
-// Restore previous conversation
 try {
   const saved = localStorage.getItem("myai-history");
   if (saved) history = JSON.parse(saved);
@@ -25,13 +25,12 @@ function saveHistory() {
   } catch {}
 }
 
-function addMessage(role, content, streamTarget = null) {
-  if (streamTarget) {
-    streamTarget.textContent = content;
-    chatEl.scrollTop = chatEl.scrollHeight;
-    return streamTarget;
-  }
+function hideEmpty() {
+  if (emptyState) emptyState.style.display = "none";
+}
 
+function addMessage(role, content) {
+  hideEmpty();
   const div = document.createElement("div");
   div.className = `msg ${role}`;
   div.textContent = content;
@@ -62,7 +61,12 @@ function setUIReady(ready) {
   sendBtn.disabled = !ready;
   modelSelect.disabled = !ready;
   reloadBtn.disabled = !ready;
-  if (ready) inputEl.focus();
+  if (ready) {
+    statusEl.classList.add("status-ready");
+    inputEl.focus();
+  } else {
+    statusEl.classList.remove("status-ready");
+  }
 }
 
 async function loadModel(modelId) {
@@ -78,7 +82,6 @@ async function loadModel(modelId) {
 
   try {
     if (engine) {
-      // unload previous if possible
       try { await engine.unload(); } catch {}
     }
 
@@ -95,11 +98,9 @@ async function loadModel(modelId) {
     statusEl.textContent = "Ready";
     setUIReady(true);
 
-    // Show history if any
-    if (history.length && chatEl.children.length === 0) {
+    if (history.length) {
+      chatEl.innerHTML = "";
       history.forEach((m) => addMessage(m.role, m.content));
-    } else if (history.length === 0) {
-      addMessage("system", `Model ready (${modelId.split("-")[0]}). Everything runs locally.`);
     }
   } catch (err) {
     statusEl.textContent = "Load failed";
@@ -139,7 +140,6 @@ async function send() {
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
-    // Add copy button after streaming finishes
     const actions = document.createElement("div");
     actions.className = "msg-actions";
     const copyBtn = document.createElement("button");
@@ -166,10 +166,9 @@ async function send() {
   statusEl.textContent = "Ready";
 }
 
-// Auto-resize textarea
 inputEl.addEventListener("input", () => {
   inputEl.style.height = "auto";
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 130) + "px";
 });
 
 sendBtn.addEventListener("click", send);
@@ -185,16 +184,13 @@ clearBtn.addEventListener("click", () => {
   history = [];
   saveHistory();
   chatEl.innerHTML = "";
-  addMessage("system", "Chat cleared.");
+  if (emptyState) {
+    emptyState.style.display = "block";
+    chatEl.appendChild(emptyState);
+  }
 });
 
-reloadBtn.addEventListener("click", () => {
-  loadModel(modelSelect.value);
-});
+reloadBtn.addEventListener("click", () => loadModel(modelSelect.value));
+modelSelect.addEventListener("change", () => loadModel(modelSelect.value));
 
-modelSelect.addEventListener("change", () => {
-  loadModel(modelSelect.value);
-});
-
-// Start with the lightest model
 loadModel(modelSelect.value);
