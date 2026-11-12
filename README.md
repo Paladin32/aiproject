@@ -1,22 +1,22 @@
-# Mon IA — Locale
+# My AI — Local
 
-Chat IA qui tourne entièrement dans le navigateur (WebLLM + WebGPU).
+AI chat that runs entirely in the browser (WebLLM + WebGPU).
 
-- Aucun serveur
-- Aucune clé API
-- Aucun crédit
-- Les données ne quittent pas ton appareil
+- No server
+- No API key
+- No credits
+- Data never leaves your device
 
-## Utilisation
+## Usage
 
-Ouvre simplement la page GitHub Pages ou ouvre `index.html` dans un navigateur compatible WebGPU (Chrome / Edge récents, Safari récent sur iPadOS).
+Just open the GitHub Pages link or open `index.html` in a WebGPU-compatible browser (recent Chrome / Edge, recent Safari on iPadOS).
 
-## Modèle actuel
+## Current model
 
-SmolLM2-1.7B (léger, adapté mobile).  
-Tu peux changer le modèle dans `app.js`.
+SmolLM2-360M (very light, mobile-friendly).  
+You can change the model in `app.js`.
 
-## Lien
+## Link
 
-Une fois GitHub Pages activé :
+Once GitHub Pages is enabled:
 `https://paladin32.github.io/aiproject/`
