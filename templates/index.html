@@ -1,44 +1,15 @@
 <!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080c18">
-  <title>CoderAI — assistant de programmation</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <main class="shell">
-    <header>
-      <a class="brand" href="/"><span class="mark">C</span><span><strong>CoderAI</strong><small>LOCAL CODE ASSISTANT</small></span></a>
-      <span class="status"><i></i> Moteur local actif</span>
-    </header>
-    <section class="intro">
-      <div class="eyebrow">CODING WORKSPACE · ALPHA 0.2</div>
-      <h1>Construis. <em>Corrige.</em><br>Comprends.</h1>
-      <p>Un assistant de programmation sans API externe. Décris ton projet, demande un exemple ou colle une erreur à diagnostiquer.</p>
-    </section>
-    <section class="panel">
-      <div class="panel-top"><label for="prompt">TA DEMANDE</label><span id="counter">0 / 2000</span></div>
-      <textarea id="prompt" maxlength="2000" rows="5" placeholder="Ex : Crée un bot Discord.js v14 avec /ping et /say…"></textarea>
-      <div class="chips">
-        <button class="chip" data-prompt="Crée un bot Discord.js v14 avec /ping et /say">Bot Discord</button>
-        <button class="chip" data-prompt="Crée une page web HTML moderne et responsive">Site web</button>
-        <button class="chip" data-prompt="Écris une calculatrice en Python">Python</button>
-        <button class="chip" data-prompt="Explique cette erreur ModuleNotFoundError">Corriger une erreur</button>
-      </div>
-      <div class="actions"><span>Pas d'API · Pas de frais d'inférence</span><button id="generate">Générer <b>↗</b></button></div>
-      <div id="error" role="alert"></div>
-    </section>
-    <section class="result" id="result" hidden>
-      <div class="result-head"><div><span class="eyebrow">RÉSULTAT</span><h2 id="result-title">Génération</h2></div><button id="copy" class="copy">Copier le code</button></div>
-      <p id="explanation" class="explanation"></p>
-      <div class="code-head"><span id="language">CODE</span><span>CODERAI</span></div>
-      <pre><code id="output"></code></pre>
-      <div id="steps" class="steps"></div>
-    </section>
-    <footer><span>CODERAI ALPHA 0.2</span><span>Génération locale déterministe · aucun modèle externe</span></footer>
-  </main>
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080c18"><title>CoderAI — ton assistant de code</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body><main class="shell">
+<header><a class="brand" href="/"><span class="mark">C</span><span><strong>CoderAI</strong><small>YOUR OPEN MODEL · YOUR RULES</small></span></a><span class="status"><i></i><span id="model-status">Modèle prêt à charger</span></span></header>
+<section class="intro"><div class="eyebrow">OPEN-WEIGHT CODING ASSISTANT</div><h1>Ton code.<br><em>Ton intelligence.</em></h1><p>Un petit modèle public exécuté sur ton infrastructure, avec une personnalité, des connaissances et des exemples que tu peux enrichir.</p></section>
+<section class="panel"><div class="panel-top"><label for="prompt">DISCUTE AVEC CODERAI</label><span id="counter">0 / 5000</span></div><textarea id="prompt" maxlength="5000" rows="5" placeholder="Décris le code que tu veux créer, corriger ou comprendre…"></textarea>
+<div class="chips"><button class="chip" data-prompt="Crée un bot Discord.js v14 avec un système de tickets complet.">Bot Discord</button><button class="chip" data-prompt="Écris une API REST Flask avec authentification et tests.">API Python</button><button class="chip" data-prompt="Explique comment corriger cette erreur : ">Corriger une erreur</button></div>
+<div class="actions"><span>Modèle local · CPU · sans API payante</span><button id="generate">Envoyer <b>↗</b></button></div><div id="error" role="alert"></div></section>
+<section class="result" id="result" hidden><div class="result-head"><div><span class="eyebrow">RÉPONSE DU MODÈLE</span><h2>CoderAI</h2></div><button id="copy" class="copy">Copier</button></div><pre><code id="output"></code></pre><div class="feedback"><span>Cette réponse t'aide ?</span><button id="good" class="vote">Utile</button><button id="bad" class="vote">À améliorer</button></div></section>
+<section class="personalize"><div class="section-heading"><div><span class="eyebrow">PERSONNALISATION</span><h2>Façonne ton IA</h2></div></div>
+<details><summary>Modifier l'identité et les instructions</summary><textarea id="persona" rows="6" placeholder="Décris la personnalité et les règles de CoderAI…"></textarea><button id="save-persona">Enregistrer les instructions</button></details>
+<details><summary>Ajouter une connaissance à retenir</summary><textarea id="knowledge" rows="3" placeholder="Ex : Dans mes projets Discord, j'utilise discord.js v14 et le préfixe s!."></textarea><button id="save-knowledge">Ajouter à la mémoire</button><p id="knowledge-status" class="muted"></p></details>
+<div class="export-row"><div><strong>Jeu de données</strong><p class="muted">Les réponses marquées « Utile » deviennent des exemples réutilisables.</p></div><a href="/api/training/export">Exporter JSONL ↗</a></div></section>
+<footer><span>CODERAI · OPEN MODEL</span><span>Les retours préparent un futur fine-tuning ; ils ne changent pas directement les poids.</span></footer>
+</main><script src="{{ url_for('static', filename='app.js') }}"></script></body></html>
