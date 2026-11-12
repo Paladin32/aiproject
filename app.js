@@ -17,17 +17,17 @@ function addMessage(role, content) {
 }
 
 async function init() {
-  // Vérification WebGPU
+  // WebGPU check
   if (!navigator.gpu) {
-    statusEl.textContent = "WebGPU absent";
-    addMessage("system", "Ton navigateur ne supporte pas WebGPU.\n\nSur iPad :\n• Essaie Chrome (si disponible)\n• Ou mets à jour iPadOS (Safari 18+ / iPadOS 18+)\n• Ou ouvre la page depuis un ordinateur");
+    statusEl.textContent = "WebGPU missing";
+    addMessage("system", "Your browser does not support WebGPU.\n\nOn iPad:\n• Try Chrome (if available)\n• Or update iPadOS (Safari 18+ / iPadOS 18+)\n• Or open this page from a computer");
     return;
   }
 
   try {
-    statusEl.textContent = "Téléchargement du modèle…";
+    statusEl.textContent = "Downloading model…";
 
-    // Plus petit modèle possible pour maximiser les chances sur iPad
+    // Smallest model for best iPad compatibility
     const selectedModel = "SmolLM2-360M-Instruct-q4f16_1-MLC";
 
     engine = await CreateMLCEngine(selectedModel, {
@@ -36,15 +36,15 @@ async function init() {
       },
     });
 
-    statusEl.textContent = "Prêt";
+    statusEl.textContent = "Ready";
     inputEl.disabled = false;
     sendBtn.disabled = false;
     inputEl.focus();
 
-    addMessage("system", "Modèle chargé (SmolLM2-360M). Tout tourne en local.");
+    addMessage("system", "Model loaded (SmolLM2-360M). Everything runs locally in your browser.");
   } catch (err) {
-    statusEl.textContent = "Échec chargement";
-    addMessage("system", "Impossible de charger le modèle.\n\nCauses possibles :\n• WebGPU trop limité sur cet iPad\n• Pas assez de mémoire\n• Navigateur trop ancien\n\nEssaie Chrome sur iPad ou un ordinateur.");
+    statusEl.textContent = "Load failed";
+    addMessage("system", "Failed to load the model.\n\nPossible causes:\n• WebGPU too limited on this iPad\n• Not enough memory\n• Browser too old\n\nTry Chrome on iPad or a computer.");
     console.error(err);
   }
 }
@@ -58,7 +58,7 @@ async function send() {
   history.push({ role: "user", content: text });
 
   sendBtn.disabled = true;
-  statusEl.textContent = "Réflexion…";
+  statusEl.textContent = "Thinking…";
 
   try {
     const reply = await engine.chat.completions.create({
@@ -70,12 +70,12 @@ async function send() {
     addMessage("assistant", content);
     history.push({ role: "assistant", content });
   } catch (err) {
-    addMessage("system", "Erreur lors de la génération.");
+    addMessage("system", "Error during generation.");
     console.error(err);
   }
 
   sendBtn.disabled = false;
-  statusEl.textContent = "Prêt";
+  statusEl.textContent = "Ready";
   inputEl.focus();
 }
 
