@@ -1,10 +1,10 @@
 """CoderAI: local GGUF inference with persistent personalization."""
 import json, os, shutil, threading, time, urllib.request, uuid
 from pathlib import Path
-from flask import Flask, Response, jsonify, render_template, request, send_file
+from flask import Flask, Response, jsonify, render_template, request, send_file\nfrom werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 24 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 MODEL_PATH = DATA_DIR / "smollm2-135m-instruct-q4_k_m.gguf"
 OLD_MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
@@ -189,6 +189,52 @@ def generate():
         app.logger.exception("Échec de génération")
         return jsonify({"error":"The model could not start. Check the Railway logs.",
                         "detail":str(exc)[:300]}), 503
+
+
+@app.post("/api/chat")
+def chat():
+    """Multi-turn general chat with bounded text/PDF attachments."""
+    try:
+        raw_messages = request.form.get("messages", "[]")
+        messages = json.loads(raw_messages)
+        if not isinstance(messages, list) or not messages:
+            return jsonify({"error": "A conversation is required."}), 400
+        messages = messages[-8:]
+        last_user = next((m for m in reversed(messages) if m.get("role") == "user"), None)
+        if not last_user:
+            return jsonify({"error": "Send a user message first."}), 400
+        attachment_context = []
+        allowed_text = {".txt", ".md", ".py", ".js", ".ts", ".jsx", ".tsx", ".json", ".html", ".css", ".csv", ".xml", ".yml", ".yaml", ".toml", ".log"}
+        for uploaded in request.files.getlist("files"):
+            if not uploaded or not uploaded.filename:
+                continue
+            name = secure_filename(uploaded.filename) or "attachment"
+            suffix = Path(name).suffix.lower()
+            raw = uploaded.read(5 * 1024 * 1024 + 1)
+            if len(raw) > 5 * 1024 * 1024:
+                return jsonify({"error": name + " exceeds the 5 MB per-file limit."}), 413
+            if suffix in allowed_text:
+                decoded = raw.decode("utf-8-sig", errors="replace")
+                attachment_context.append("File: " + name + "\\n" + decoded[:12000])
+            elif suffix == ".pdf":
+                try:
+                    from pypdf import PdfReader
+                    reader = PdfReader(__import__("io").BytesIO(raw))
+                    extracted = "\\n".join((page.extract_text() or "") for page in reader.pages[:12])
+                    attachment_context.append("PDF: " + name + "\\n" + (extracted[:12000] or "[No selectable text found; this may be a scanned PDF.]"))
+                except Exception:
+                    return jsonify({"error": "Could not read " + name + ". The PDF may be encrypted or invalid."}), 400
+            elif suffix in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                attachment_context.append("Image attachment: " + name + ". The local model cannot inspect image pixels; do not guess what it shows.")
+            else:
+                return jsonify({"error": "Unsupported file type: " + suffix}), 400
+        if attachment_context:
+            last_user["content"] = str(last_user.get("content", "")) + "\\n\\nAttachments (use only extracted text below; image pixels are unavailable):\\n" + "\\n\\n".join(attachment_context)
+        answer = run_model(messages)["choices"][0]["message"].get("content", "").strip()
+        return jsonify({"answer": answer, "model": MODEL_NAME, "personalized": True})
+    except Exception as exc:
+        app.logger.exception("General chat failed")
+        return jsonify({"error": "The local model could not complete this response. " + str(exc)[:180]}), 503
 
 @app.get("/api/persona")
 def get_persona(): return jsonify({"persona":current_persona()})
