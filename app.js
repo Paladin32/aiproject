@@ -17,11 +17,18 @@ function addMessage(role, content) {
 }
 
 async function init() {
+  // Vérification WebGPU
+  if (!navigator.gpu) {
+    statusEl.textContent = "WebGPU absent";
+    addMessage("system", "Ton navigateur ne supporte pas WebGPU.\n\nSur iPad :\n• Essaie Chrome (si disponible)\n• Ou mets à jour iPadOS (Safari 18+ / iPadOS 18+)\n• Ou ouvre la page depuis un ordinateur");
+    return;
+  }
+
   try {
     statusEl.textContent = "Téléchargement du modèle…";
 
-    // Modèle léger adapté à l'iPad
-    const selectedModel = "SmolLM2-1.7B-Instruct-q4f16_1-MLC";
+    // Plus petit modèle possible pour maximiser les chances sur iPad
+    const selectedModel = "SmolLM2-360M-Instruct-q4f16_1-MLC";
 
     engine = await CreateMLCEngine(selectedModel, {
       initProgressCallback: (report) => {
@@ -34,10 +41,10 @@ async function init() {
     sendBtn.disabled = false;
     inputEl.focus();
 
-    addMessage("system", "Modèle chargé. Tout tourne en local dans ton navigateur.");
+    addMessage("system", "Modèle chargé (SmolLM2-360M). Tout tourne en local.");
   } catch (err) {
-    statusEl.textContent = "Erreur WebGPU";
-    addMessage("system", "WebGPU non disponible ou modèle trop lourd pour cet appareil.\nEssaie Chrome/Edge récent ou un modèle plus petit.");
+    statusEl.textContent = "Échec chargement";
+    addMessage("system", "Impossible de charger le modèle.\n\nCauses possibles :\n• WebGPU trop limité sur cet iPad\n• Pas assez de mémoire\n• Navigateur trop ancien\n\nEssaie Chrome sur iPad ou un ordinateur.");
     console.error(err);
   }
 }
