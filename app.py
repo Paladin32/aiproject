@@ -6,9 +6,10 @@ from flask import Flask, Response, jsonify, render_template, request, send_file
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 24 * 1024
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
-MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
-MODEL_URL = "https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf"
-MODEL_NAME = "SmolLM2-360M-Instruct (GGUF Q4_K_M)"
+MODEL_PATH = DATA_DIR / "smollm2-135m-instruct-q4_k_m.gguf"
+OLD_MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
+MODEL_URL = "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/c6f2d396a5faa22c9722908d47e8da81a5d8cebc/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+MODEL_NAME = "SmolLM2-135M-Instruct (GGUF Q4_K_M)"
 SYSTEM_DEFAULT = """Tu es CoderAI, un assistant de programmation indépendant.
 Réponds en français sauf demande contraire. Aide à concevoir, écrire, expliquer,
 corriger et tester du code. Donne des solutions complètes et cohérentes avec les
@@ -32,14 +33,16 @@ def write_json(path, value):
     temp.replace(path)
 
 def download_model():
-    if MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 200_000_000: return
+    if MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 80_000_000: return
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # Free-tier volume is small: remove previous 360M weights before downloading 135M.
+    OLD_MODEL_PATH.unlink(missing_ok=True)
     temporary = MODEL_PATH.with_suffix(".download")
     req = urllib.request.Request(MODEL_URL, headers={"User-Agent": "CoderAI/1.0"})
     with urllib.request.urlopen(req, timeout=240) as response:
         with temporary.open("wb") as target:
             shutil.copyfileobj(response, target, length=1024 * 1024)
-    if temporary.stat().st_size < 200_000_000:
+    if temporary.stat().st_size < 80_000_000:
         temporary.unlink(missing_ok=True)
         raise RuntimeError("Téléchargement du modèle incomplet.")
     temporary.replace(MODEL_PATH)
@@ -51,8 +54,9 @@ def get_model():
         if MODEL is not None: return MODEL
         download_model()
         from llama_cpp import Llama
-        MODEL = Llama(model_path=str(MODEL_PATH), n_ctx=512, n_threads=1,
-                      n_batch=16, use_mmap=True, verbose=False)
+        MODEL = Llama(model_path=str(MODEL_PATH), n_ctx=384, n_threads=1,
+                      n_threads_batch=1, n_batch=64, n_ubatch=64,
+                      n_gpu_layers=0, use_mmap=True, use_mlock=False, verbose=False)
         return MODEL
 
 def current_persona():
@@ -113,7 +117,7 @@ def run_model(messages, stream=False):
         messages=prepare_messages(messages),
         temperature=0.25,
         top_p=0.9,
-        max_tokens=256,
+        max_tokens=128,
         repeat_penalty=1.12,
         stream=stream,
     )
