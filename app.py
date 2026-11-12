@@ -1,7 +1,7 @@
 """CoderAI: local GGUF inference with persistent personalization."""
-import json, os, shutil, threading, urllib.request, uuid
+import json, os, shutil, threading, time, urllib.request, uuid
 from pathlib import Path
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, Response, jsonify, render_template, request, send_file
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 24 * 1024
@@ -51,8 +51,8 @@ def get_model():
         if MODEL is not None: return MODEL
         download_model()
         from llama_cpp import Llama
-        MODEL = Llama(model_path=str(MODEL_PATH), n_ctx=768, n_threads=1,
-                      n_batch=32, use_mmap=True, verbose=False)
+        MODEL = Llama(model_path=str(MODEL_PATH), n_ctx=512, n_threads=1,
+                      n_batch=16, use_mmap=True, verbose=False)
         return MODEL
 
 def current_persona():
@@ -81,11 +81,22 @@ def helpful_examples(prompt):
     ranked.sort(key=lambda item: item[0], reverse=True)
     return [item for _, item in ranked[:2]]
 
-def generate_answer(prompt):
-    llm = get_model()
+def prepare_messages(messages):
+    normalized = []
+    client_systems = []
+    for item in messages[-10:]:
+        role = item.get("role")
+        text = str(item.get("content", ""))[:3000]
+        if role == "system":
+            client_systems.append(text)
+        elif role in ("user", "assistant") and text:
+            normalized.append({"role": role, "content": text})
+    last_prompt = next((m["content"] for m in reversed(normalized) if m["role"] == "user"), "")
     system = current_persona()
-    notes = relevant_knowledge(prompt)
-    examples = helpful_examples(prompt)
+    if client_systems:
+        system += "\n\nInstructions supplémentaires de Continue :\n" + "\n".join(client_systems)[:3000]
+    notes = relevant_knowledge(last_prompt)
+    examples = helpful_examples(last_prompt)
     if notes:
         system += "\n\nConnaissances personnelles :\n" + "\n---\n".join(notes)
     if examples:
@@ -93,13 +104,70 @@ def generate_answer(prompt):
         for item in examples:
             system += "\nDemande : " + item.get("prompt", "")[:500]
             system += "\nRéponse : " + item.get("answer", "")[:900]
-    result = llm.create_chat_completion(
-        messages=[{"role":"system","content":system},{"role":"user","content":prompt}],
-        temperature=0.25, top_p=0.9, max_tokens=384, repeat_penalty=1.12)
+    return [{"role": "system", "content": system}] + normalized
+
+
+def run_model(messages, stream=False):
+    llm = get_model()
+    return llm.create_chat_completion(
+        messages=prepare_messages(messages),
+        temperature=0.25,
+        top_p=0.9,
+        max_tokens=256,
+        repeat_penalty=1.12,
+        stream=stream,
+    )
+
+
+def generate_answer(prompt):
+    result = run_model([{"role": "user", "content": prompt}])
     return result["choices"][0]["message"].get("content", "").strip()
 
 @app.get("/")
 def home(): return render_template("index.html")
+
+@app.get("/v1/models")
+def openai_models():
+    return jsonify({"object": "list", "data": [
+        {"id": "coderai", "object": "model", "created": 0, "owned_by": "local"}
+    ]})
+
+
+@app.post("/v1/chat/completions")
+def openai_chat_completions():
+    payload = request.get_json(silent=True) or {}
+    messages = payload.get("messages")
+    if not isinstance(messages, list) or not messages:
+        return jsonify({"error": {"message": "messages est obligatoire", "type": "invalid_request_error"}}), 400
+    model_name = str(payload.get("model", "coderai"))[:100]
+    if payload.get("stream"):
+        def events():
+            try:
+                for chunk in run_model(messages, stream=True):
+                    chunk["model"] = model_name
+                    yield "data: " + json.dumps(chunk, ensure_ascii=False) + "\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception:
+                app.logger.exception("Erreur de streaming Continue")
+                yield "data: [DONE]\n\n"
+        return Response(events(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    try:
+        result = run_model(messages)
+        answer = result["choices"][0]["message"].get("content", "")
+        return jsonify({
+            "id": "chatcmpl-coderai",
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": model_name,
+            "choices": [{"index": 0, "message": {"role": "assistant", "content": answer},
+                         "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+        })
+    except Exception as exc:
+        app.logger.exception("Erreur endpoint OpenAI compatible")
+        return jsonify({"error": {"message": str(exc)[:300], "type": "server_error"}}), 503
+
 
 @app.get("/health")
 def health():
