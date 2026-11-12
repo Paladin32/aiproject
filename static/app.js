@@ -3,18 +3,34 @@ const generateButton = document.querySelector("#generate");
 const output = document.querySelector("#output");
 const errorBox = document.querySelector("#error");
 const copyButton = document.querySelector("#copy");
+const resultBox = document.querySelector("#result");
+
+promptBox.addEventListener("input", () => {
+  document.querySelector("#counter").textContent = `${promptBox.value.length} / 2000`;
+});
+
+document.querySelectorAll("[data-prompt]").forEach(button => {
+  button.addEventListener("click", () => {
+    promptBox.value = button.dataset.prompt;
+    promptBox.dispatchEvent(new Event("input"));
+    promptBox.focus();
+  });
+});
 
 generateButton.addEventListener("click", async () => {
   errorBox.textContent = "";
   const prompt = promptBox.value.trim();
-  if (!prompt) {
-    errorBox.textContent = "Ajoute un prompt avant de lancer la génération.";
+  if (prompt.length < 3) {
+    errorBox.textContent = "Décris ce que tu veux créer.";
     return;
   }
   generateButton.disabled = true;
-  generateButton.textContent = "Génération…";
-  output.textContent = "Le réseau neuronal calcule…";
-  copyButton.disabled = true;
+  generateButton.textContent = "Traitement…";
+  resultBox.hidden = false;
+  document.querySelector("#result-title").textContent = "Génération en cours…";
+  output.textContent = "";
+  document.querySelector("#explanation").textContent = "";
+  document.querySelector("#steps").replaceChildren();
   try {
     const response = await fetch("/api/generate", {
       method: "POST",
@@ -22,11 +38,19 @@ generateButton.addEventListener("click", async () => {
       body: JSON.stringify({prompt})
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Une erreur est survenue.");
-    output.textContent = data.generated;
-    copyButton.disabled = false;
+    if (!response.ok) throw new Error(data.error || "Erreur serveur.");
+    document.querySelector("#result-title").textContent = data.title;
+    document.querySelector("#language").textContent = data.language.toUpperCase();
+    document.querySelector("#explanation").textContent = data.explanation;
+    output.textContent = data.code;
+    (data.next_steps || []).forEach(step => {
+      const item = document.createElement("p");
+      item.textContent = "→ " + step;
+      document.querySelector("#steps").append(item);
+    });
+    copyButton.disabled = data.language === "text";
+    resultBox.scrollIntoView({behavior: "smooth", block: "start"});
   } catch (error) {
-    output.textContent = "Aucune génération disponible.";
     errorBox.textContent = error.message;
   } finally {
     generateButton.disabled = false;
@@ -37,5 +61,5 @@ generateButton.addEventListener("click", async () => {
 copyButton.addEventListener("click", async () => {
   await navigator.clipboard.writeText(output.textContent);
   copyButton.textContent = "Copié !";
-  setTimeout(() => copyButton.textContent = "Copier", 1200);
+  setTimeout(() => copyButton.textContent = "Copier le code", 1400);
 });

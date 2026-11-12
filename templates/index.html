@@ -3,32 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
-  <title>CoderAI — laboratoire de code</title>
+  <meta name="theme-color" content="#080c18">
+  <title>CoderAI — assistant de programmation</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <main class="shell">
     <header>
-      <div class="brand"><span class="mark">C</span><div><h1>CoderAI</h1><p>NEURAL CODE LAB · FROM SCRATCH</p></div></div>
-      <span class="status"><i></i> Prototype local au serveur</span>
+      <a class="brand" href="/"><span class="mark">C</span><span><strong>CoderAI</strong><small>LOCAL CODE ASSISTANT</small></span></a>
+      <span class="status"><i></i> Moteur local actif</span>
     </header>
     <section class="intro">
-      <div class="eyebrow">EXPERIMENTAL CHARACTER MODEL</div>
-      <h2>Un moteur neuronal<br><em>entraîné depuis zéro.</em></h2>
-      <p>Donne un début de code ou une consigne. Le petit réseau neuronal génère une suite de caractères à partir de ce qu'il a appris.</p>
+      <div class="eyebrow">CODING WORKSPACE · ALPHA 0.2</div>
+      <h1>Construis. <em>Corrige.</em><br>Comprends.</h1>
+      <p>Un assistant de programmation sans API externe. Décris ton projet, demande un exemple ou colle une erreur à diagnostiquer.</p>
     </section>
     <section class="panel">
-      <label for="prompt">TON PROMPT</label>
-      <textarea id="prompt" rows="5" placeholder="Exemple : def fibonacci(n):"></textarea>
-      <div class="actions"><span id="hint">Python · JavaScript · HTML</span><button id="generate">Générer <b>↗</b></button></div>
+      <div class="panel-top"><label for="prompt">TA DEMANDE</label><span id="counter">0 / 2000</span></div>
+      <textarea id="prompt" maxlength="2000" rows="5" placeholder="Ex : Crée un bot Discord.js v14 avec /ping et /say…"></textarea>
+      <div class="chips">
+        <button class="chip" data-prompt="Crée un bot Discord.js v14 avec /ping et /say">Bot Discord</button>
+        <button class="chip" data-prompt="Crée une page web HTML moderne et responsive">Site web</button>
+        <button class="chip" data-prompt="Écris une calculatrice en Python">Python</button>
+        <button class="chip" data-prompt="Explique cette erreur ModuleNotFoundError">Corriger une erreur</button>
+      </div>
+      <div class="actions"><span>Pas d'API · Pas de frais d'inférence</span><button id="generate">Générer <b>↗</b></button></div>
       <div id="error" role="alert"></div>
     </section>
-    <section class="result">
-      <div class="result-head"><span>GÉNÉRATION</span><button id="copy" class="copy" disabled>Copier</button></div>
-      <pre><code id="output">Le résultat apparaîtra ici…</code></pre>
+    <section class="result" id="result" hidden>
+      <div class="result-head"><div><span class="eyebrow">RÉSULTAT</span><h2 id="result-title">Génération</h2></div><button id="copy" class="copy">Copier le code</button></div>
+      <p id="explanation" class="explanation"></p>
+      <div class="code-head"><span id="language">CODE</span><span>CODERAI</span></div>
+      <pre><code id="output"></code></pre>
+      <div id="steps" class="steps"></div>
     </section>
-    <footer>CoderAI est un prototype pédagogique, pas un assistant de programmation comparable aux grands modèles de langage.</footer>
+    <footer><span>CODERAI ALPHA 0.2</span><span>Génération locale déterministe · aucun modèle externe</span></footer>
   </main>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

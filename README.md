@@ -1,68 +1,30 @@
 # CoderAI
 
-CoderAI est un prototype éducatif d'IA spécialisée dans le code, construit avec Python, NumPy et Flask. Son petit réseau neuronal récurrent (RNN) est initialisé avec des poids aléatoires puis entraîné sur le corpus du dépôt.
+CoderAI est un assistant de programmation expérimental, hébergé sur Railway et sans API d'IA externe.
 
-**Aucun modèle pré-entraîné ni API d'IA externe n'est utilisé.**
+## Fonctionnement honnête
 
-## Important : ce que ce projet sait faire
+La version web utilise un moteur local déterministe : détection de tâches et générateurs de code testables (bot Discord.js/discord.py, page HTML, API Flask, calculatrice et algorithmes Python, premiers diagnostics d'erreurs). Il ne s'agit pas d'un grand modèle de langage et il ne sait pas encore traiter toutes les demandes libres.
 
-Ce dépôt démontre les bases d'un entraînement neuronal depuis zéro : vocabulaire de caractères, propagation avant, rétropropagation dans le temps (BPTT), mise à jour des poids et génération caractère par caractère.
+Le dépôt contient aussi un petit RNN caractère-par-caractère écrit en NumPy, initialisé aléatoirement et entraînable depuis zéro avec `python train.py`. Ce RNN est un projet pédagogique séparé : il n'est pas utilisé pour prétendre produire des réponses de qualité LLM.
 
-Ce n'est pas un grand modèle de langage. Avec un petit corpus et un RNN minuscule, les résultats seront souvent incohérents et ne doivent pas être considérés comme du code fiable ou sécurisé. Un modèle de programmation de qualité professionnelle nécessiterait énormément plus de données, de calcul et de temps.
+## Déploiement
 
-## Lancer localement
-
-Python 3.11 ou plus récent recommandé.
-
-```bash
-pip install -r requirements.txt
-python train.py --steps 900
-python app.py
-```
-
-Ouvre ensuite http://localhost:8080.
-
-## Déploiement sur Railway
-
-1. Ouvre Railway et crée un nouveau projet depuis ce dépôt GitHub.
-2. Choisis le dépôt `Paladin32/aiproject`.
-3. Railway détectera le `Dockerfile`.
-4. Le build installe les dépendances et entraîne le modèle pendant la construction de l'image.
-5. Railway fournit la variable `PORT`; Gunicorn écoute sur cette variable.
-
-Le premier build peut être lent à cause de l'entraînement. Les ressources gratuites Railway sont limitées et dépendent des conditions du compte.
+Railway détecte le Dockerfile et lance Gunicorn. Aucun entraînement coûteux n'est exécuté pendant le build. La variable `PORT` est fournie par Railway.
 
 ## API
 
-- `GET /` : interface web.
-- `GET /health` : état du serveur et du modèle.
-- `POST /api/generate` : génération.
+- `GET /` : interface.
+- `GET /health` : état de l'application.
+- `POST /api/generate` : génération locale, JSON `{"prompt":"Crée un bot Discord.js" }`.
 
-Exemple de requête :
+## Développement local
 
-```json
-{"prompt":"def fibonacci(n):"}
+```bash
+pip install -r requirements.txt
+python app.py
 ```
 
-## Arborescence
+## Limites
 
-```
-.
-├── app.py
-├── train.py
-├── model/
-│   └── rnn.py
-├── data/
-│   └── corpus.txt
-├── templates/
-│   └── index.html
-├── static/
-│   ├── app.js
-│   └── style.css
-├── Dockerfile
-└── requirements.txt
-```
-
-## Licence
-
-MIT — voir le fichier LICENSE.
+Les générateurs sont des modèles de départ, pas une garantie de code complet ou sécurisé. Vérifie et teste toujours le code avant de l'utiliser. Aucun secret (token Discord, clé API, mot de passe) ne doit être collé dans le prompt.
