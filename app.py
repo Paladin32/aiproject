@@ -1,356 +1,185 @@
-"""CoderAI: offline coding helper with deterministic generators.
-
-No paid API, no external model, no pretrained weights. This alpha uses
-curated code templates and task detection; the NumPy RNN remains an
-educational training experiment and is not misrepresented as an LLM.
-"""
-import re
-from flask import Flask, jsonify, render_template, request
+"""CoderAI: local GGUF inference with persistent personalization."""
+import json, os, shutil, threading, urllib.request, uuid
+from pathlib import Path
+from flask import Flask, jsonify, render_template, request, send_file
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 24 * 1024
+DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
+MODEL_PATH = DATA_DIR / "smollm2-360m-instruct-q4_k_m.gguf"
+MODEL_URL = "https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf"
+MODEL_NAME = "SmolLM2-360M-Instruct (GGUF Q4_K_M)"
+SYSTEM_DEFAULT = """Tu es CoderAI, un assistant de programmation indépendant.
+Réponds en français sauf demande contraire. Aide à concevoir, écrire, expliquer,
+corriger et tester du code. Donne des solutions complètes et cohérentes avec les
+versions demandées. Signale les hypothèses, dépendances et limites.
+Ne prétends jamais avoir exécuté du code si ce n'est pas le cas.
+Si une demande manque d'informations, pose une question précise.
+Privilégie Python, JavaScript/TypeScript, HTML/CSS, Node.js et discord.js.
+Ne révèle jamais de secrets et rappelle de ne pas coller de tokens ou mots de passe."""
+MODEL = None
+MODEL_LOCK = threading.Lock()
+FILE_LOCK = threading.Lock()
 
+def read_json(path, default):
+    try: return json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError): return default
 
-def clean_prompt(value):
-    return re.sub(r"\s+", " ", str(value or "")).strip()[:2000]
+def write_json(path, value):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(path.suffix + ".tmp")
+    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), "utf-8")
+    temp.replace(path)
 
+def download_model():
+    if MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 200_000_000: return
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    temporary = MODEL_PATH.with_suffix(".download")
+    req = urllib.request.Request(MODEL_URL, headers={"User-Agent": "CoderAI/1.0"})
+    with urllib.request.urlopen(req, timeout=240) as response:
+        with temporary.open("wb") as target:
+            shutil.copyfileobj(response, target, length=1024 * 1024)
+    if temporary.stat().st_size < 200_000_000:
+        temporary.unlink(missing_ok=True)
+        raise RuntimeError("Téléchargement du modèle incomplet.")
+    temporary.replace(MODEL_PATH)
 
-def code_result(title, language, code, explanation, next_steps=None):
-    return {
-        "title": title,
-        "language": language,
-        "code": code.strip(),
-        "explanation": explanation,
-        "next_steps": next_steps or [],
-        "engine": "Générateur local CoderAI",
-    }
+def get_model():
+    global MODEL
+    if MODEL is not None: return MODEL
+    with MODEL_LOCK:
+        if MODEL is not None: return MODEL
+        download_model()
+        from llama_cpp import Llama
+        MODEL = Llama(model_path=str(MODEL_PATH), n_ctx=768, n_threads=1,
+                      n_batch=32, use_mmap=True, verbose=False)
+        return MODEL
 
+def current_persona():
+    path = DATA_DIR / "persona.txt"
+    return path.read_text("utf-8")[:4000] if path.exists() else SYSTEM_DEFAULT
 
-def discord_js():
-    return code_result(
-        "Bot Discord — discord.js v14", "javascript",
-        """const { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder } = require("discord.js");
-require("dotenv").config();
+def relevant_knowledge(prompt):
+    notes = read_json(DATA_DIR / "knowledge.json", [])
+    words = {w.lower() for w in prompt.split() if len(w) > 3}
+    ranked = []
+    for note in notes:
+        text = note.get("text", "")
+        score = sum(1 for word in words if word in text.lower())
+        if score: ranked.append((score, text))
+    ranked.sort(key=lambda item: item[0], reverse=True)
+    return [item[1][:1200] for item in ranked[:3]]
 
-const commands = [
-  new SlashCommandBuilder().setName("ping").setDescription("Affiche la latence du bot"),
-  new SlashCommandBuilder()
-    .setName("say")
-    .setDescription("Fait répéter un message au bot")
-    .addStringOption(option =>
-      option.setName("message").setDescription("Message à envoyer").setRequired(true)
-    ),
-].map(command => command.toJSON());
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
-});
-
-client.once(Events.ClientReady, async readyClient => {
-  console.log(`Connecté en tant que ${readyClient.user.tag}`);
-  const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
-  await rest.put(
-    Routes.applicationCommands(readyClient.user.id),
-    { body: commands }
-  );
-  console.log("Commandes slash enregistrées.");
-});
-
-client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.commandName === "ping") {
-    return interaction.reply({ content: `Pong ! ${client.ws.ping} ms`, ephemeral: true });
-  }
-
-  if (interaction.commandName === "say") {
-    const message = interaction.options.getString("message", true);
-    return interaction.reply({ content: message });
-  }
-});
-
-client.login(process.env.DISCORD_TOKEN);""",
-        "Bot Discord fonctionnel avec /ping et /say. Il utilise discord.js v14 et enregistre les commandes slash au démarrage.",
-        ["Installe : npm install discord.js dotenv", "Crée un fichier .env avec DISCORD_TOKEN=TON_TOKEN", "Active les commandes slash dans le Developer Portal et lance : node index.js"]
-    )
-
-
-def discord_python():
-    return code_result(
-        "Bot Discord — discord.py", "python",
-        """import os
-import discord
-from discord import app_commands
-from dotenv import load_dotenv
-
-load_dotenv()
-intents = discord.Intents.default()
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
-
-@tree.command(name="ping", description="Affiche la latence du bot")
-async def ping(interaction: discord.Interaction):
-    await interaction.response.send_message(
-        f"Pong ! {round(client.latency * 1000)} ms",
-        ephemeral=True
-    )
-
-@tree.command(name="say", description="Fait répéter un message au bot")
-@app_commands.describe(message="Message à envoyer")
-async def say(interaction: discord.Interaction, message: str):
-    await interaction.response.send_message(message)
-
-@client.event
-async def on_ready():
-    await tree.sync()
-    print(f"Connecté en tant que {client.user}")
-
-client.run(os.environ["DISCORD_TOKEN"])""",
-        "Bot Discord Python avec deux commandes slash et synchronisation automatique.",
-        ["Installe : pip install -U discord.py python-dotenv", "Ajoute DISCORD_TOKEN=TON_TOKEN dans .env", "Lance : python bot.py"]
-    )
-
-
-def html_page():
-    return code_result(
-        "Page web responsive", "html",
-        """<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mon projet</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-      font-family: system-ui, sans-serif; color: #f4f6ff;
-      background: radial-gradient(circle at top, #263b70, #090d18 65%); }
-    main { width: min(680px, 92vw); padding: 42px; border: 1px solid #35466e;
-      border-radius: 24px; background: #111a2dcc; text-align: center; }
-    h1 { font-size: clamp(2.2rem, 7vw, 4rem); margin: 0 0 14px; }
-    p { color: #b9c5df; line-height: 1.7; }
-    a { display: inline-block; margin-top: 18px; padding: 13px 20px;
-      border-radius: 10px; background: #9bb4ff; color: #10172a;
-      font-weight: 700; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Bienvenue 👋</h1>
-    <p>Une page simple, moderne et adaptée aux mobiles. Modifie ce contenu pour ton projet.</p>
-    <a href="#suite">Découvrir</a>
-  </main>
-</body>
-</html>""",
-        "Page HTML autonome, responsive et sans dépendance externe. Tu peux remplacer le titre, le texte et les couleurs."
-    )
-
-
-def flask_api():
-    return code_result(
-        "API REST avec Flask", "python",
-        """from flask import Flask, jsonify, request
-
-app = Flask(__name__)
-tasks = []
-next_id = 1
-
-@app.get("/health")
-def health():
-    return jsonify({"status": "ok"})
-
-@app.get("/api/tasks")
-def list_tasks():
-    return jsonify(tasks)
-
-@app.post("/api/tasks")
-def create_task():
-    global next_id
-    data = request.get_json(silent=True) or {}
-    title = str(data.get("title", "")).strip()
-    if not title:
-        return jsonify({"error": "Le champ title est obligatoire"}), 400
-    task = {"id": next_id, "title": title, "done": False}
-    next_id += 1
-    tasks.append(task)
-    return jsonify(task), 201
-
-@app.delete("/api/tasks/<int:task_id>")
-def delete_task(task_id):
-    for index, task in enumerate(tasks):
-        if task["id"] == task_id:
-            return jsonify(tasks.pop(index))
-    return jsonify({"error": "Tâche introuvable"}), 404
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)""",
-        "API avec endpoints GET, POST et DELETE, validation des entrées et réponses JSON. Les données sont en mémoire et seront perdues au redémarrage.",
-        ["Installe : pip install flask", "Lance : python app.py", "Teste POST /api/tasks avec {"title":"Apprendre Flask"}"]
-    )
-
-
-def python_calculator():
-    return code_result(
-        "Calculatrice Python", "python",
-        """def calculate(a: float, operator: str, b: float) -> float:
-    operations = {
-        "+": lambda: a + b,
-        "-": lambda: a - b,
-        "*": lambda: a * b,
-        "/": lambda: a / b if b != 0 else None,
-        "**": lambda: a ** b,
-        "%": lambda: a % b if b != 0 else None,
-    }
-    if operator not in operations:
-        raise ValueError("Opérateur non reconnu")
-    result = operations[operator]()
-    if result is None:
-        raise ZeroDivisionError("Division par zéro impossible")
-    return result
-
-
-if __name__ == "__main__":
-    print("Calculatrice (+, -, *, /, **, %)")
-    try:
-        left = float(input("Premier nombre : "))
-        op = input("Opérateur : ").strip()
-        right = float(input("Deuxième nombre : "))
-        print("Résultat :", calculate(left, op, right))
-    except (ValueError, ZeroDivisionError) as error:
-        print("Erreur :", error)""",
-        "Calculatrice en ligne de commande avec validation de l'opérateur et gestion de la division par zéro."
-    )
-
-
-def python_algorithm(prompt):
-    p = prompt.lower()
-    if "fibonacci" in p:
-        code = """def fibonacci(n: int) -> list[int]:
-    if n < 0:
-        raise ValueError("n doit être positif ou nul")
-    sequence = []
-    a, b = 0, 1
-    for _ in range(n):
-        sequence.append(a)
-        a, b = b, a + b
-    return sequence
-
-
-print(fibonacci(10))"""
-        return code_result("Suite de Fibonacci", "python", code, "Version itérative en O(n), qui évite les appels récursifs coûteux.")
-    if "factorielle" in p or "factorial" in p:
-        code = """def factorial(n: int) -> int:
-    if n < 0:
-        raise ValueError("n doit être positif ou nul")
-    result = 1
-    for number in range(2, n + 1):
-        result *= number
-    return result
-
-
-print(factorial(5))"""
-        return code_result("Factorielle", "python", code, "Calcul itératif avec contrôle des valeurs négatives.")
-    if "premier" in p or "prime" in p:
-        code = """def is_prime(n: int) -> bool:
-    if n < 2:
-        return False
-    if n % 2 == 0:
-        return n == 2
-    divisor = 3
-    while divisor * divisor <= n:
-        if n % divisor == 0:
-            return False
-        divisor += 2
-    return True
-
-
-print(is_prime(29))"""
-        return code_result("Test de nombre premier", "python", code, "Teste les diviseurs jusqu'à la racine carrée de n.")
-    return None
-
-
-def debug_error(prompt):
-    p = prompt.lower()
-    if "modulenotfounderror" in p or "no module named" in p:
-        return code_result("Diagnostic : module Python manquant", "text",
-            "Python ne trouve pas le paquet importé.\n\n1. Vérifie le nom du paquet.\n2. Installe-le dans le même environnement : python -m pip install NOM_DU_PAQUET\n3. Vérifie l'interpréteur : python --version et python -m pip --version\n4. Sur Railway, ajoute le paquet à requirements.txt puis redéploie.",
-            "Le message exact et le fichier requirements.txt permettent de confirmer le correctif.")
-    if "syntaxerror" in p or "indentationerror" in p:
-        return code_result("Diagnostic : erreur de syntaxe Python", "text",
-            "Python n'arrive pas à analyser le fichier. Vérifie la ligne indiquée dans le traceback :\n- parenthèses, crochets et guillemets fermés ;\n- deux-points après if, for, while, def et class ;\n- indentation cohérente (4 espaces recommandés).",
-            "Colle le traceback complet et 10 lignes autour de la ligne signalée pour obtenir un correctif précis.")
-    if "cannot read properties" in p or "typeerror" in p:
-        return code_result("Diagnostic : erreur JavaScript probable", "text",
-            "Une valeur utilisée n'a probablement pas le type attendu ou vaut undefined/null. Vérifie la variable sur la ligne signalée, la réponse d'une API et les accès imbriqués. Utilise une validation explicite avant de lire ses propriétés.",
-            "Le message complet, le fichier et le code autour de la ligne sont nécessaires pour identifier la cause exacte.")
-    return None
-
+def helpful_examples(prompt):
+    examples = read_json(DATA_DIR / "feedback.json", [])
+    words = {w.lower() for w in prompt.split() if len(w) > 3}
+    ranked = []
+    for item in examples:
+        if not item.get("helpful"): continue
+        score = sum(1 for word in words if word in item.get("prompt", "").lower())
+        if score: ranked.append((score, item))
+    ranked.sort(key=lambda item: item[0], reverse=True)
+    return [item for _, item in ranked[:2]]
 
 def generate_answer(prompt):
-    p = prompt.lower()
-    debug = debug_error(prompt)
-    if debug:
-        return debug
-
-    if any(word in p for word in ("discord", "discord.js", "discordjs")):
-        if any(word in p for word in ("python", "discord.py")):
-            return discord_python()
-        return discord_js()
-
-    if any(word in p for word in ("site web", "page web", "html", "landing page", "portfolio")):
-        return html_page()
-
-    if any(word in p for word in ("api flask", "api rest", "serveur flask", "endpoint")):
-        return flask_api()
-
-    if any(word in p for word in ("calculatrice", "calculator")):
-        return python_calculator()
-
-    algorithm = python_algorithm(prompt)
-    if algorithm:
-        return algorithm
-
-    if "python" in p or "script" in p:
-        return code_result(
-            "Base de script Python", "python",
-            """def main():
-    # TODO: décris ici le traitement à effectuer
-    print("CoderAI : projet initialisé")
-
-
-if __name__ == "__main__":
-    main()""",
-            "Je n'ai pas reconnu assez précisément la tâche pour générer une solution spécialisée. Reformule en précisant les entrées, le résultat attendu et les contraintes."
-        )
-
-    return code_result(
-        "Précise ta demande", "text",
-        "Pour produire du code utile, indique :\n1. Le langage (Python, JavaScript, HTML/CSS…).\n2. Ce que le programme doit faire.\n3. Les fonctionnalités obligatoires.\n4. Les erreurs ou contraintes à respecter.\n\nExemple : « Fais un bot Discord.js v14 avec /ping, /ban et un système de tickets. »",
-        "Cette version fonctionne sans service externe. Elle reconnaît certaines tâches et génère des modèles vérifiables ; elle ne comprend pas encore toutes les demandes comme un grand modèle de langage."
-    )
-
+    llm = get_model()
+    system = current_persona()
+    notes = relevant_knowledge(prompt)
+    examples = helpful_examples(prompt)
+    if notes:
+        system += "\n\nConnaissances personnelles :\n" + "\n---\n".join(notes)
+    if examples:
+        system += "\n\nExemples appréciés :"
+        for item in examples:
+            system += "\nDemande : " + item.get("prompt", "")[:500]
+            system += "\nRéponse : " + item.get("answer", "")[:900]
+    result = llm.create_chat_completion(
+        messages=[{"role":"system","content":system},{"role":"user","content":prompt}],
+        temperature=0.25, top_p=0.9, max_tokens=384, repeat_penalty=1.12)
+    return result["choices"][0]["message"].get("content", "").strip()
 
 @app.get("/")
-def home():
-    return render_template("index.html")
-
+def home(): return render_template("index.html")
 
 @app.get("/health")
 def health():
-    return jsonify({"status": "ok", "engine": "local-template-engine", "api": "v2"})
-
+    return jsonify({"status":"ok","model":MODEL_NAME,"model_downloaded":MODEL_PATH.exists(),
+        "model_loaded":MODEL is not None,
+        "personal_notes":len(read_json(DATA_DIR/"knowledge.json",[])),
+        "feedback_examples":len(read_json(DATA_DIR/"feedback.json",[]))})
 
 @app.post("/api/generate")
 def generate():
     payload = request.get_json(silent=True) or {}
-    prompt = clean_prompt(payload.get("prompt"))
-    if len(prompt) < 3:
-        return jsonify({"error": "Décris un peu plus ce que tu veux créer."}), 400
-    result = generate_answer(prompt)
-    result["prompt"] = prompt
-    return jsonify(result)
+    prompt = str(payload.get("prompt","")).strip()[:5000]
+    if len(prompt) < 2: return jsonify({"error":"Écris une demande plus précise."}), 400
+    try: return jsonify({"answer":generate_answer(prompt),"model":MODEL_NAME,"personalized":True})
+    except Exception as exc:
+        app.logger.exception("Échec de génération")
+        return jsonify({"error":"Le modèle n'a pas pu démarrer. Vérifie les logs Railway.",
+                        "detail":str(exc)[:300]}), 503
 
+@app.get("/api/persona")
+def get_persona(): return jsonify({"persona":current_persona()})
+
+@app.post("/api/persona")
+def set_persona():
+    payload = request.get_json(silent=True) or {}
+    persona = str(payload.get("persona","")).strip()[:4000]
+    if len(persona) < 20: return jsonify({"error":"La personnalité doit contenir au moins 20 caractères."}), 400
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    (DATA_DIR/"persona.txt").write_text(persona, "utf-8")
+    return jsonify({"ok":True})
+
+@app.get("/api/knowledge")
+def get_knowledge(): return jsonify({"items":read_json(DATA_DIR/"knowledge.json",[])})
+
+@app.post("/api/knowledge")
+def add_knowledge():
+    payload = request.get_json(silent=True) or {}
+    note = str(payload.get("text","")).strip()[:3000]
+    if len(note) < 10: return jsonify({"error":"Ajoute au moins 10 caractères."}), 400
+    path = DATA_DIR/"knowledge.json"
+    with FILE_LOCK:
+        items = read_json(path, [])
+        items.append({"id":str(uuid.uuid4()),"text":note})
+        write_json(path, items[-100:])
+    return jsonify({"ok":True,"count":len(items[-100:])})
+
+@app.delete("/api/knowledge/<note_id>")
+def delete_knowledge(note_id):
+    path = DATA_DIR/"knowledge.json"
+    with FILE_LOCK:
+        items = read_json(path, [])
+        updated = [item for item in items if item.get("id") != note_id]
+        write_json(path, updated)
+    return jsonify({"ok":True,"count":len(updated)})
+
+@app.post("/api/feedback")
+def feedback():
+    payload = request.get_json(silent=True) or {}
+    prompt = str(payload.get("prompt","")).strip()[:2000]
+    answer = str(payload.get("answer","")).strip()[:4000]
+    if not prompt or not answer: return jsonify({"error":"Exemple incomplet."}), 400
+    path = DATA_DIR/"feedback.json"
+    with FILE_LOCK:
+        items = read_json(path, [])
+        items.append({"prompt":prompt,"answer":answer,"helpful":bool(payload.get("helpful",False))})
+        write_json(path, items[-500:])
+    return jsonify({"ok":True,"count":len(items[-500:])})
+
+@app.get("/api/training/export")
+def export_training():
+    items = read_json(DATA_DIR/"feedback.json", [])
+    export_path = DATA_DIR/"coderai-training.jsonl"
+    with export_path.open("w",encoding="utf-8") as output:
+        for item in items:
+            if item.get("helpful"):
+                row = {"messages":[{"role":"user","content":item.get("prompt","")},
+                                   {"role":"assistant","content":item.get("answer","")}]}
+                output.write(json.dumps(row,ensure_ascii=False)+"\n")
+    return send_file(export_path,as_attachment=True,download_name="coderai-training.jsonl",
+                     mimetype="application/x-ndjson")
 
 if __name__ == "__main__":
-    import os
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8080")))
+    app.run(host="0.0.0.0",port=int(os.environ.get("PORT","8080")))
