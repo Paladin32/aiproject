@@ -8,10 +8,9 @@ models:
     apiBase: https://aiproject-production-7f2e6390.up.railway.app/v1
     apiKey: coderai-local
     contextLength: 512
-    completionOptions:
+    defaultCompletionOptions:
       temperature: 0.2
       maxTokens: 256
     roles:
       - chat
       - edit
-      - apply
