@@ -1,0 +1,17 @@
+name: CoderAI
+version: 1.0.0
+schema: v1
+models:
+  - name: CoderAI Local
+    provider: openai
+    model: coderai
+    apiBase: https://aiproject-production-7f2e6390.up.railway.app/v1
+    apiKey: coderai-local
+    contextLength: 512
+    completionOptions:
+      temperature: 0.2
+      maxTokens: 256
+    roles:
+      - chat
+      - edit
+      - apply
