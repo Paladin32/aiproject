@@ -12,7 +12,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local /usr/local
 COPY requirements.txt .
-RUN pip install --no-cache-dir Flask==3.1.2 gunicorn==23.0.0
+RUN pip install --no-cache-dir Flask==3.1.2 gunicorn==23.0.0 'pypdf>=5,<7'
 COPY . .
 EXPOSE 8080
 CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 300 app:app"]
