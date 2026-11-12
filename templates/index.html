@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>CoderAI — laboratoire de code</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="mark">C</span><div><h1>CoderAI</h1><p>NEURAL CODE LAB · FROM SCRATCH</p></div></div>
+      <span class="status"><i></i> Prototype local au serveur</span>
+    </header>
+    <section class="intro">
+      <div class="eyebrow">EXPERIMENTAL CHARACTER MODEL</div>
+      <h2>Un moteur neuronal<br><em>entraîné depuis zéro.</em></h2>
+      <p>Donne un début de code ou une consigne. Le petit réseau neuronal génère une suite de caractères à partir de ce qu'il a appris.</p>
+    </section>
+    <section class="panel">
+      <label for="prompt">TON PROMPT</label>
+      <textarea id="prompt" rows="5" placeholder="Exemple : def fibonacci(n):"></textarea>
+      <div class="actions"><span id="hint">Python · JavaScript · HTML</span><button id="generate">Générer <b>↗</b></button></div>
+      <div id="error" role="alert"></div>
+    </section>
+    <section class="result">
+      <div class="result-head"><span>GÉNÉRATION</span><button id="copy" class="copy" disabled>Copier</button></div>
+      <pre><code id="output">Le résultat apparaîtra ici…</code></pre>
+    </section>
+    <footer>CoderAI est un prototype pédagogique, pas un assistant de programmation comparable aux grands modèles de langage.</footer>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
