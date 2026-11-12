@@ -4,4 +4,6 @@ __pycache__/
 .venv/
 venv/
 model/weights.npz
+*.gguf
+/data/
 .DS_Store
