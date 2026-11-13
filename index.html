@@ -139,6 +139,37 @@
       .history-top{padding-top:2px}
     }
 
+
+    /* Strict monochrome palette: prevent inherited tinted colors. */
+    :root{
+      color-scheme:light;
+      --bg:#ffffff!important;--surface:#ffffff!important;--surface-2:#f4f4f4!important;
+      --line:#e5e5e5!important;--ink:#111111!important;--muted:#737373!important;
+      --muted-2:#a3a3a3!important;--accent:#111111!important;--accent-dark:#000000!important;
+      --accent-pale:#f0f0f0!important;--danger:#555555!important;
+    }
+    html,body,.app-shell,#chat,footer,.composer,#settingsPanel,.history-drawer{
+      background-color:#ffffff!important;color:#111111!important;
+    }
+    .history-drawer{background-color:#f5f5f5!important}
+    .brand-mark,.btn-primary,#send{background:#111111!important;color:#ffffff!important;border-color:#111111!important}
+    .btn-primary:hover,#send:hover{background:#000000!important}
+    .user,.suggestion,.system,.field input,.field textarea,.copy-btn{
+      background:#f3f3f3!important;color:#171717!important;border-color:#e5e5e5!important;
+    }
+    .assistant,.msg,.brand h1,.empty-state h2,.suggestion strong,.field label,
+    .settings-heading strong,.history-open,.history-top strong{color:#171717!important}
+    .muted,.brand span,.empty-state p,.suggestion span,.composer-hint,.footer-meta,
+    #status,.settings-heading span,.history-empty,.field label{color:#737373!important}
+    .btn,select,.history-open,.history-action{border-color:#e5e5e5!important}
+    .btn:hover,.history-open:hover,.history-open.active,.history-action:hover{background:#eeeeee!important;color:#111111!important}
+    #status:before,#status.status-ready:before,#status.status-error:before{background:#777777!important}
+    .status-ready,.status-error{color:#555555!important}
+    a{color:#111111}
+    @media(prefers-color-scheme:dark){
+      :root{color-scheme:light!important}
+      html,body{background:#ffffff!important;color:#111111!important}
+    }
   </style>
 </head>
 <body>
@@ -152,6 +183,7 @@
     </header>
     <div class="toolbar">
       <select id="modelSelect" aria-label="Choose a model" disabled><option value="">No model</option></select>
+      <a class="btn" href="docs.html" style="display:inline-flex;align-items:center;text-decoration:none">Documentation</a>
       <button class="btn" id="historyBtn" type="button">History</button>
       <div class="toolbar-spacer"></div>
       <button class="btn" id="settingsBtn" type="button">Settings</button>
