@@ -170,6 +170,10 @@
       :root{color-scheme:light!important}
       html,body{background:#ffffff!important;color:#111111!important}
     }
+  
+    /* Final safeguard: the entire interface must remain strictly monochrome. */
+    html { filter: grayscale(1) !important; }
+    * { accent-color: #000 !important; }
   </style>
 </head>
 <body>
