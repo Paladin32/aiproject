@@ -12,36 +12,130 @@ const saveSettingsBtn = document.getElementById("saveSettings");
 const closeSettingsBtn = document.getElementById("closeSettings");
 const emptyState = document.getElementById("emptyState");
 const connectionInfo = document.getElementById("connectionInfo");
+const historyBtn = document.getElementById("historyBtn");
+const historyDrawer = document.getElementById("historyDrawer");
+const historyBackdrop = document.getElementById("historyBackdrop");
+const closeHistoryBtn = document.getElementById("closeHistory");
+const newChatBtn = document.getElementById("newChatBtn");
+const historyList = document.getElementById("historyList");
 
-let history = [];
+const STORAGE_KEY = "arqen-conversations-v1";
+let conversations = [];
+let activeConversationId = null;
 let isGenerating = false;
 let baseUrl = localStorage.getItem("myai-baseurl") || "";
-let systemPrompt = localStorage.getItem("myai-system") || "You are a helpful, direct and intelligent assistant. You answer clearly and without unnecessary refusals.";
+let systemPrompt = localStorage.getItem("myai-system") || "You are Arqen Era 1.1, an advanced general-purpose AI. Match the user's language, be accurate, and clearly say when you are unsure.";
 
-// Load saved history
-try {
-  const saved = localStorage.getItem("myai-history");
-  if (saved) history = JSON.parse(saved);
-} catch {}
+function makeId() {
+  return globalThis.crypto?.randomUUID?.() || `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
-baseUrlInput.value = baseUrl;
-systemPromptInput.value = systemPrompt;
+function getActiveConversation() {
+  return conversations.find((conversation) => conversation.id === activeConversationId) || null;
+}
 
-function saveHistory() {
+function saveConversations() {
   try {
-    localStorage.setItem("myai-history", JSON.stringify(history));
-  } catch {}
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  } catch (error) {
+    console.error("Could not save conversations:", error);
+    setStatus("Storage full", "status-error");
+  }
+}
+
+function migrateOldHistory() {
+  try {
+    const old = JSON.parse(localStorage.getItem("myai-history") || "[]");
+    if (Array.isArray(old) && old.length) {
+      conversations = [{
+        id: makeId(),
+        title: old.find((message) => message.role === "user")?.content?.slice(0, 48) || "Previous conversation",
+        messages: old,
+        updatedAt: new Date().toISOString()
+      }];
+      activeConversationId = conversations[0].id;
+      saveConversations();
+    }
+  } catch (error) {
+    console.warn("Old history could not be migrated:", error);
+  }
+}
+
+function loadConversations() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (Array.isArray(saved)) conversations = saved;
+    else migrateOldHistory();
+  } catch {
+    migrateOldHistory();
+  }
+  if (!activeConversationId && conversations.length) {
+    conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    activeConversationId = conversations[0].id;
+  }
+}
+
+function createConversation() {
+  const conversation = {
+    id: makeId(),
+    title: "New conversation",
+    messages: [],
+    updatedAt: new Date().toISOString()
+  };
+  conversations.unshift(conversation);
+  activeConversationId = conversation.id;
+  saveConversations();
+  renderConversation();
+  renderHistoryList();
+  closeHistory();
+  inputEl.focus();
+}
+
+function updateConversationTimestamp(conversation) {
+  conversation.updatedAt = new Date().toISOString();
+  conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+function addMessageToConversation(role, content) {
+  let conversation = getActiveConversation();
+  if (!conversation) {
+    conversation = {
+      id: makeId(),
+      title: "New conversation",
+      messages: [],
+      updatedAt: new Date().toISOString()
+    };
+    conversations.unshift(conversation);
+    activeConversationId = conversation.id;
+  }
+  conversation.messages.push({ role, content });
+  if (role === "user" && conversation.title === "New conversation") {
+    conversation.title = content.replace(/\s+/g, " ").slice(0, 48) || "New conversation";
+  }
+  updateConversationTimestamp(conversation);
+  saveConversations();
+  renderHistoryList();
 }
 
 function hideEmpty() {
   if (emptyState) emptyState.style.display = "none";
 }
 
+function showEmpty() {
+  chatEl.innerHTML = "";
+  if (emptyState) {
+    emptyState.style.display = "block";
+    chatEl.appendChild(emptyState);
+  }
+}
+
 function addMessage(role, content) {
   hideEmpty();
   const div = document.createElement("div");
   div.className = `msg ${role}`;
-  div.textContent = content;
+  const textNode = document.createElement("span");
+  textNode.textContent = content;
+  div.appendChild(textNode);
 
   if (role === "assistant") {
     const actions = document.createElement("div");
@@ -49,11 +143,13 @@ function addMessage(role, content) {
     const copyBtn = document.createElement("button");
     copyBtn.className = "copy-btn";
     copyBtn.textContent = "Copy";
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(content).then(() => {
+    copyBtn.type = "button";
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(content);
         copyBtn.textContent = "Copied";
         setTimeout(() => (copyBtn.textContent = "Copy"), 1200);
-      });
+      } catch { copyBtn.textContent = "Unavailable"; }
     };
     actions.appendChild(copyBtn);
     div.appendChild(actions);
@@ -61,60 +157,141 @@ function addMessage(role, content) {
 
   chatEl.appendChild(div);
   chatEl.scrollTop = chatEl.scrollHeight;
-  return div;
+  return { element: div, text: textNode };
+}
+
+function renderConversation() {
+  chatEl.innerHTML = "";
+  const conversation = getActiveConversation();
+  if (!conversation || !conversation.messages.length) {
+    showEmpty();
+  } else {
+    conversation.messages.forEach((message) => addMessage(message.role, message.content));
+  }
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  historyList.innerHTML = "";
+  if (!conversations.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = "No conversations yet. Start a chat and it will be saved here.";
+    historyList.appendChild(empty);
+    return;
+  }
+
+  conversations.forEach((conversation) => {
+    const row = document.createElement("div");
+    row.className = "history-item";
+
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "history-open" + (conversation.id === activeConversationId ? " active" : "");
+    const title = document.createElement("span");
+    title.textContent = conversation.title || "New conversation";
+    const date = document.createElement("small");
+    date.textContent = new Date(conversation.updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    open.append(title, date);
+    open.addEventListener("click", () => {
+      if (isGenerating) return;
+      activeConversationId = conversation.id;
+      renderConversation();
+      closeHistory();
+    });
+
+    const rename = document.createElement("button");
+    rename.type = "button";
+    rename.className = "history-action";
+    rename.textContent = "✎";
+    rename.title = "Rename conversation";
+    rename.setAttribute("aria-label", "Rename conversation");
+    rename.addEventListener("click", () => {
+      const next = prompt("Conversation name:", conversation.title || "");
+      if (next && next.trim()) {
+        conversation.title = next.trim().slice(0, 80);
+        saveConversations();
+        renderHistoryList();
+      }
+    });
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "history-action";
+    remove.textContent = "×";
+    remove.title = "Delete conversation";
+    remove.setAttribute("aria-label", "Delete conversation");
+    remove.addEventListener("click", () => {
+      if (!confirm(`Delete "${conversation.title}"?`)) return;
+      conversations = conversations.filter((item) => item.id !== conversation.id);
+      if (activeConversationId === conversation.id) {
+        activeConversationId = conversations[0]?.id || null;
+        renderConversation();
+      }
+      saveConversations();
+      renderHistoryList();
+    });
+
+    row.append(open, rename, remove);
+    historyList.appendChild(row);
+  });
+}
+
+function openHistory() {
+  historyDrawer.classList.add("open");
+  historyBackdrop.classList.add("open");
+  historyDrawer.setAttribute("aria-hidden", "false");
+}
+function closeHistory() {
+  historyDrawer.classList.remove("open");
+  historyBackdrop.classList.remove("open");
+  historyDrawer.setAttribute("aria-hidden", "true");
 }
 
 function setStatus(text, type = "") {
   statusEl.textContent = text;
   statusEl.className = type;
 }
-
 function setUIReady(ready) {
   inputEl.disabled = !ready;
   sendBtn.disabled = !ready;
   modelSelect.disabled = !ready;
-  if (ready) inputEl.focus();
 }
 
 async function fetchModels() {
   if (!baseUrl) return;
   try {
-    const res = await fetch(`${baseUrl}/api/tags`);
-    if (!res.ok) throw new Error("Cannot reach Ollama");
-    const data = await res.json();
+    const response = await fetch(`${baseUrl}/api/tags`);
+    if (!response.ok) throw new Error("Cannot reach Ollama");
+    const data = await response.json();
     modelSelect.innerHTML = "";
-    if (data.models && data.models.length) {
-      data.models.forEach((m) => {
-        const opt = document.createElement("option");
-        opt.value = m.name;
-        opt.textContent = m.name;
-        modelSelect.appendChild(opt);
+    if (data.models?.length) {
+      data.models.forEach((model) => {
+        const option = document.createElement("option");
+        option.value = model.name;
+        option.textContent = model.name;
+        modelSelect.appendChild(option);
       });
       setStatus("Ready", "status-ready");
-      connectionInfo.textContent = baseUrl.replace("http://", "");
+      connectionInfo.textContent = baseUrl.replace(/^https?:\/\//, "");
       setUIReady(true);
-
-      // Restore history
-      if (history.length) {
-        chatEl.innerHTML = "";
-        history.forEach((m) => addMessage(m.role, m.content));
-      }
+      renderConversation();
     } else {
-      modelSelect.innerHTML = "<option>No models found</option>";
+      modelSelect.innerHTML = "<option value=\"\">No models found</option>";
       setStatus("No models", "status-error");
+      setUIReady(false);
     }
-  } catch (err) {
+  } catch (error) {
     setStatus("Connection failed", "status-error");
     connectionInfo.textContent = "Not connected";
     setUIReady(false);
-    console.error(err);
+    console.error(error);
   }
 }
 
 async function send() {
   const text = inputEl.value.trim();
   if (!text || isGenerating || !baseUrl) return;
-
   const model = modelSelect.value;
   if (!model) {
     addMessage("system", "No model selected.");
@@ -123,133 +300,100 @@ async function send() {
 
   inputEl.value = "";
   inputEl.style.height = "auto";
+  addMessageToConversation("user", text);
   addMessage("user", text);
-  history.push({ role: "user", content: text });
-  saveHistory();
 
   isGenerating = true;
   setUIReady(false);
   setStatus("Thinking…");
-
-  const assistantDiv = addMessage("assistant", "…");
+  const assistantMessage = addMessage("assistant", "…");
   let fullReply = "";
-
-  // Build messages with system prompt
   const messages = [];
-  if (systemPrompt.trim()) {
-    messages.push({ role: "system", content: systemPrompt.trim() });
-  }
-  history.forEach((m) => messages.push({ role: m.role, content: m.content }));
+  if (systemPrompt.trim()) messages.push({ role: "system", content: systemPrompt.trim() });
+  const conversation = getActiveConversation();
+  conversation.messages.forEach((message) => messages.push({ role: message.role, content: message.content }));
 
   try {
-    const res = await fetch(`${baseUrl}/api/chat`, {
+    const response = await fetch(`${baseUrl}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: true,
-      }),
+      body: JSON.stringify({ model, messages, stream: true })
     });
+    if (!response.ok) throw new Error(`Model request failed (${response.status})`);
+    if (!response.body) throw new Error("Streaming is not supported by this response");
 
-    if (!res.ok) throw new Error("Request failed");
-
-    const reader = res.body.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
-
+    let buffer = "";
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split("\n").filter((l) => l.trim());
-
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
       for (const line of lines) {
-        try {
-          const json = JSON.parse(line);
-          if (json.message && json.message.content) {
-            fullReply += json.message.content;
-            assistantDiv.textContent = fullReply;
-            chatEl.scrollTop = chatEl.scrollHeight;
-          }
-        } catch {}
+        if (!line.trim()) continue;
+        const data = JSON.parse(line);
+        if (data.message?.content) {
+          fullReply += data.message.content;
+          assistantMessage.text.textContent = fullReply;
+          chatEl.scrollTop = chatEl.scrollHeight;
+        }
       }
+      if (done) break;
     }
-
-    // Add copy button
-    const actions = document.createElement("div");
-    actions.className = "msg-actions";
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Copy";
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(fullReply).then(() => {
-        copyBtn.textContent = "Copied";
-        setTimeout(() => (copyBtn.textContent = "Copy"), 1200);
-      });
-    };
-    actions.appendChild(copyBtn);
-    assistantDiv.appendChild(actions);
-
-    history.push({ role: "assistant", content: fullReply });
-    saveHistory();
+    if (buffer.trim()) {
+      const data = JSON.parse(buffer);
+      if (data.message?.content) fullReply += data.message.content;
+    }
+    assistantMessage.text.textContent = fullReply || "(Empty response)";
+    addMessageToConversation("assistant", fullReply || "(Empty response)");
     setStatus("Ready", "status-ready");
-  } catch (err) {
-    assistantDiv.textContent = "Error: could not reach the model.";
+  } catch (error) {
+    assistantMessage.text.textContent = `Error: ${error.message || "could not reach the model"}.`;
     setStatus("Error", "status-error");
-    console.error(err);
+    console.error(error);
+  } finally {
+    isGenerating = false;
+    setUIReady(true);
+    inputEl.focus();
   }
-
-  isGenerating = false;
-  setUIReady(true);
 }
 
-// Events
 inputEl.addEventListener("input", () => {
   inputEl.style.height = "auto";
   inputEl.style.height = Math.min(inputEl.scrollHeight, 130) + "px";
 });
-
 sendBtn.addEventListener("click", send);
-inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
+inputEl.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
     send();
   }
 });
-
 clearBtn.addEventListener("click", () => {
-  if (!confirm("Clear the entire conversation?")) return;
-  history = [];
-  saveHistory();
-  chatEl.innerHTML = "";
-  if (emptyState) {
-    emptyState.style.display = "block";
-    chatEl.appendChild(emptyState);
-  }
+  if (isGenerating) return;
+  createConversation();
 });
+historyBtn.addEventListener("click", openHistory);
+closeHistoryBtn.addEventListener("click", closeHistory);
+historyBackdrop.addEventListener("click", closeHistory);
+newChatBtn.addEventListener("click", createConversation);
 
-settingsBtn.addEventListener("click", () => {
-  settingsPanel.classList.toggle("open");
-});
-
-closeSettingsBtn.addEventListener("click", () => {
-  settingsPanel.classList.remove("open");
-});
-
+settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
+closeSettingsBtn.addEventListener("click", () => settingsPanel.classList.remove("open"));
 saveSettingsBtn.addEventListener("click", () => {
   baseUrl = baseUrlInput.value.trim().replace(/\/$/, "");
   systemPrompt = systemPromptInput.value;
-
   localStorage.setItem("myai-baseurl", baseUrl);
   localStorage.setItem("myai-system", systemPrompt);
-
   settingsPanel.classList.remove("open");
   setStatus("Connecting…");
   fetchModels();
 });
 
-// Auto-connect if URL already saved
-if (baseUrl) {
-  fetchModels();
-}
+loadConversations();
+baseUrlInput.value = baseUrl;
+systemPromptInput.value = systemPrompt;
+renderHistoryList();
+if (baseUrl) fetchModels();
+else renderConversation();
