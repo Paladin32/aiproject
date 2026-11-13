@@ -94,6 +94,51 @@
     }
     @media(max-width:390px){.brand span{font-size:9px}.toolbar{gap:5px}.toolbar .btn{padding:0 7px}select{font-size:10px}.suggestions{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+    /* ChatGPT-style workspace layout */
+    @media(min-width:701px){
+      .app-shell{max-width:none;margin-left:260px;padding:0 34px}
+      .history-drawer{transform:none;top:0;bottom:0;width:260px;padding:22px 14px 18px;background:#f7f7f5;border-right:1px solid #e7e8e3;box-shadow:none;gap:16px}
+      .history-backdrop{display:none!important}
+      .sidebar-brand{display:flex;align-items:center;gap:11px;padding:2px 7px 23px;border-bottom:1px solid var(--line);margin-bottom:2px}
+      .sidebar-brand .brand-mark{height:32px;width:32px;border-radius:10px}
+      .sidebar-brand .brand-copy h1{font-size:15px}
+      .sidebar-brand .brand-copy span{font-size:9px}
+      .history-top{padding:0 5px}
+      .history-top strong{font-size:11px;color:#858a80;font-weight:650}
+      #closeHistory,#historyBtn{display:none}
+      #newChatBtn{width:100%;height:40px;text-align:left;padding-left:13px}
+      #historyList{gap:3px}
+      .history-open{padding:9px 10px}
+      .history-open span{font-size:12px}
+      .history-open small{display:none}
+      .history-action{font-size:13px}
+      .app-shell header{height:66px}
+      .app-shell header .brand{display:none}
+      .app-shell .header-right{margin-left:auto}
+      .toolbar{height:55px}
+      #clearBtn{display:none}
+      #chat{max-width:790px;padding-top:24px}
+      footer{max-width:790px}
+      .empty-state{padding-bottom:45px}
+      .welcome-mark{display:none}
+      .welcome-eyebrow{display:none}
+      .empty-state h2{font-size:32px;letter-spacing:-.045em;font-weight:600}
+      .empty-state p{font-size:13px}
+      .composer{border-radius:24px;padding:10px 11px;background:#fff;box-shadow:0 2px 12px #0000000a}
+      #input{padding:12px 13px}
+      #send{border-radius:50%;min-width:38px;width:38px;height:38px;font-size:0;position:relative}
+      #send:after{content:"↑";font-size:19px;line-height:1;position:absolute;inset:0;display:grid;place-items:center}
+      .composer-hint{padding:5px 12px 1px}
+    }
+    @media(max-width:700px){
+      .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 0 14px;border-bottom:1px solid var(--line)}
+      .sidebar-brand .brand-mark{height:32px;width:32px;border-radius:10px}
+      .sidebar-brand .brand-copy h1{font-size:14px}
+      .sidebar-brand .brand-copy span{font-size:9px}
+      .history-top{padding-top:2px}
+    }
+
   </style>
 </head>
 <body>
@@ -114,7 +159,7 @@
     </div>
     <div class="history-backdrop" id="historyBackdrop"></div>
     <aside class="history-drawer" id="historyDrawer" aria-label="Conversation history" aria-hidden="true">
-      <div class="history-top"><strong>Your conversations</strong><button class="btn" id="closeHistory" type="button">Close</button></div>
+      <div class="sidebar-brand"><div class="brand-mark" aria-hidden="true">A</div><div class="brand-copy"><h1>Arqen</h1><span>PERSONAL AI</span></div></div><div class="history-top"><strong>Recent</strong><button class="btn" id="closeHistory" type="button">Close</button></div>
       <button class="btn btn-primary" id="newChatBtn" type="button">＋ New conversation</button>
       <div id="historyList"><div class="history-empty">Your saved conversations will appear here.</div></div>
     </aside>
