@@ -1,22 +1,25 @@
-# My AI — Local
+# My AI — by Paul
 
-AI chat that runs entirely in the browser (WebLLM + WebGPU).
+Personal AI interface connected to your own Ollama instance.
 
-- No server
-- No API key
-- No credits
-- Data never leaves your device
+- No third-party limits
+- Full control over the model
+- Clean interface made for mobile & desktop
 
-## Usage
+## How to use
 
-Just open the GitHub Pages link or open `index.html` in a WebGPU-compatible browser (recent Chrome / Edge, recent Safari on iPadOS).
+1. Your collaborator installs Ollama + a model on the VPS
+2. Open this page (GitHub Pages or locally)
+3. Click **Settings**
+4. Paste the Ollama URL (example: `http://123.45.67.89:11434`)
+5. Optionally edit the System Prompt
+6. Click **Save & Connect**
 
-## Current model
+## Features
 
-SmolLM2-360M (very light, mobile-friendly).  
-You can change the model in `app.js`.
-
-## Link
-
-Once GitHub Pages is enabled:
-`https://paladin32.github.io/aiproject/`
+- Streaming responses
+- Model selector
+- Editable system prompt (personality + restrictions)
+- Conversation history saved locally
+- Copy button on answers
+- Made by Paul branding
