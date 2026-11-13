@@ -29,7 +29,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Header */
     header {
       padding: 12px 16px 10px;
       border-bottom: 1px solid var(--border);
@@ -43,13 +42,8 @@
       justify-content: space-between;
       align-items: center;
     }
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
     .brand h1 {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 700;
       letter-spacing: -0.03em;
     }
@@ -59,22 +53,20 @@
       font-weight: 500;
     }
     #status {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--muted);
-      max-width: 48%;
       text-align: right;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .status-ready { color: var(--success) !important; }
+    .status-error { color: var(--danger) !important; }
 
     .controls {
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
     }
-    select, .btn {
+    select, .btn, input[type="text"] {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
@@ -83,7 +75,7 @@
       font-size: 0.8rem;
       outline: none;
     }
-    select { flex: 1; min-width: 0; }
+    select { flex: 1; min-width: 120px; }
     .btn {
       cursor: pointer;
       white-space: nowrap;
@@ -92,22 +84,50 @@
     .btn:hover { background: #27272a; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-danger { color: var(--danger); border-color: #3f1f1f; }
-
-    .progress {
-      height: 2px;
-      background: var(--border);
-      width: 100%;
-      border-radius: 1px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
+    .btn-primary {
       background: var(--accent);
-      width: 0%;
-      transition: width 0.25s ease;
+      border-color: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    /* Settings panel */
+    #settingsPanel {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 4px;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #settingsPanel.open { display: flex; }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field label {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .field input, .field textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      width: 100%;
+    }
+    .field textarea {
+      min-height: 70px;
+      resize: vertical;
+      font-family: inherit;
     }
 
-    /* Chat */
     #chat {
       flex: 1;
       overflow-y: auto;
@@ -120,13 +140,13 @@
       margin: auto;
       text-align: center;
       color: var(--muted);
-      max-width: 280px;
+      max-width: 300px;
       padding: 20px;
     }
     .empty-state h2 {
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       color: var(--text);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       font-weight: 600;
     }
     .empty-state p {
@@ -185,7 +205,6 @@
       cursor: pointer;
     }
 
-    /* Footer */
     footer {
       padding: 12px 14px 14px;
       border-top: 1px solid var(--border);
@@ -237,10 +256,6 @@
       color: var(--muted);
       padding: 0 2px;
     }
-    .footer-meta a {
-      color: var(--muted);
-      text-decoration: none;
-    }
   </style>
 </head>
 <body>
@@ -250,25 +265,37 @@
         <h1>My AI</h1>
         <span>Made by Paul</span>
       </div>
-      <div id="status">Loading…</div>
+      <div id="status">Not connected</div>
     </div>
+
     <div class="controls">
       <select id="modelSelect" disabled>
-        <option value="SmolLM2-360M-Instruct-q4f16_1-MLC">SmolLM2 360M — Fast</option>
-        <option value="SmolLM2-1.7B-Instruct-q4f16_1-MLC">SmolLM2 1.7B — Better</option>
-        <option value="Qwen2.5-0.5B-Instruct-q4f16_1-MLC">Qwen2.5 0.5B</option>
-        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B</option>
+        <option value="">No model</option>
       </select>
-      <button class="btn" id="reloadBtn" disabled title="Reload model">Reload</button>
-      <button class="btn btn-danger" id="clearBtn" title="Clear chat">Clear</button>
+      <button class="btn" id="settingsBtn">Settings</button>
+      <button class="btn btn-danger" id="clearBtn">Clear</button>
     </div>
-    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="settingsPanel">
+      <div class="field">
+        <label>Ollama URL (example: http://123.45.67.89:11434)</label>
+        <input type="text" id="baseUrl" placeholder="http://IP:11434" />
+      </div>
+      <div class="field">
+        <label>System Prompt (controls personality & restrictions)</label>
+        <textarea id="systemPrompt" placeholder="You are a helpful assistant..."></textarea>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" id="saveSettings">Save & Connect</button>
+        <button class="btn" id="closeSettings">Close</button>
+      </div>
+    </div>
   </header>
 
   <div id="chat">
     <div class="empty-state" id="emptyState">
       <h2>Your private AI</h2>
-      <p>Runs entirely in your browser.<br>No server. No account. No limits.</p>
+      <p>Open Settings, paste the VPS address,<br>then start chatting.</p>
     </div>
   </div>
 
@@ -278,7 +305,7 @@
       <button id="send" disabled>Send</button>
     </div>
     <div class="footer-meta">
-      <span>Local · WebGPU</span>
+      <span id="connectionInfo">Not connected</span>
       <span>Made by Paul</span>
     </div>
   </footer>
