@@ -1,25 +1,23 @@
-# My AI — by Paul
+# Arqen — AI workspace
 
-Personal AI interface connected to your own Ollama instance.
+A lightweight browser interface for an Ollama-powered assistant.
 
-- No third-party limits
-- Full control over the model
-- Clean interface made for mobile & desktop
+## Current features
 
-## How to use
+- Ollama model connection and model selector
+- Streaming chat responses
+- Multiple conversations saved in browser storage
+- Conversation history drawer
+- Rename, reopen, and delete conversations
+- Automatic conversation titles based on the first user message
+- Editable system instructions
+- Copy assistant responses
+- Mobile-friendly interface
 
-1. Your collaborator installs Ollama + a model on the VPS
-2. Open this page (GitHub Pages or locally)
-3. Click **Settings**
-4. Paste the Ollama URL (example: `http://123.45.67.89:11434`)
-5. Optionally edit the System Prompt
-6. Click **Save & Connect**
+## Storage note
 
-## Features
+Conversation history is currently stored in the browser using localStorage. It stays on the same browser/device and is not yet synchronized between devices. A Neon PostgreSQL database can provide cross-device persistence once a secure backend API and the Neon DATABASE_URL are configured.
 
-- Streaming responses
-- Model selector
-- Editable system prompt (personality + restrictions)
-- Conversation history saved locally
-- Copy button on answers
-- Made by Paul branding
+## Run
+
+Serve the repository as a static website, then configure the Ollama server URL in Settings. The browser must be able to reach the Ollama API.
