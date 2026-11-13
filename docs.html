@@ -35,6 +35,10 @@
     .credit strong{font-size:17px}.credit span{display:block;color:#777;font-size:12px;margin-top:6px}
     footer{border-top:1px solid #e8e8e8;padding:22px 24px;text-align:center;color:#888;font-size:11px}
     @media(max-width:560px){main{padding:48px 20px 65px}.grid,.credits{grid-template-columns:1fr}.lead{font-size:16px}.top{padding:0 18px}}
+  
+    /* Final safeguard: the entire interface must remain strictly monochrome. */
+    html { filter: grayscale(1) !important; }
+    * { accent-color: #000 !important; }
   </style>
 </head>
 <body>
