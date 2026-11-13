@@ -24,7 +24,7 @@ let conversations = [];
 let activeConversationId = null;
 let isGenerating = false;
 let baseUrl = localStorage.getItem("myai-baseurl") || "";
-let systemPrompt = localStorage.getItem("myai-system") || "You are Arqen Era 1.1, an advanced general-purpose AI. Match the user's language, be accurate, and clearly say when you are unsure.";
+let systemPrompt = localStorage.getItem("myai-system") || "You are Arqen Era 1.1, an advanced general-purpose AI. Match the user's language, tone, and level of expertise. Be clear, useful, natural, and precise. Prioritize accuracy over confidence: never invent facts, sources, or results, and clearly say when you are unsure. Distinguish facts from assumptions. Understand the user's intent and answer directly. Keep answers concise by default, but explain complex topics step by step when useful. For coding, provide complete, maintainable solutions and never claim code was tested unless it was. For calculations, double-check your work. Adapt to the conversation and follow the user's instructions carefully.";
 
 function makeId() {
   return globalThis.crypto?.randomUUID?.() || `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -397,3 +397,16 @@ systemPromptInput.value = systemPrompt;
 renderHistoryList();
 if (baseUrl) fetchModels();
 else renderConversation();
+
+
+document.querySelectorAll(".suggestion[data-prompt]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (inputEl.disabled || isGenerating) {
+      settingsPanel.classList.add("open");
+      return;
+    }
+    inputEl.value = button.dataset.prompt || "";
+    inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    inputEl.focus();
+  });
+});
