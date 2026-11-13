@@ -1,23 +1,31 @@
-import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
-
 const chatEl = document.getElementById("chat");
 const inputEl = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 const statusEl = document.getElementById("status");
 const modelSelect = document.getElementById("modelSelect");
-const reloadBtn = document.getElementById("reloadBtn");
 const clearBtn = document.getElementById("clearBtn");
-const progressBar = document.getElementById("progressBar");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const baseUrlInput = document.getElementById("baseUrl");
+const systemPromptInput = document.getElementById("systemPrompt");
+const saveSettingsBtn = document.getElementById("saveSettings");
+const closeSettingsBtn = document.getElementById("closeSettings");
 const emptyState = document.getElementById("emptyState");
+const connectionInfo = document.getElementById("connectionInfo");
 
-let engine = null;
 let history = [];
 let isGenerating = false;
+let baseUrl = localStorage.getItem("myai-baseurl") || "";
+let systemPrompt = localStorage.getItem("myai-system") || "You are a helpful, direct and intelligent assistant. You answer clearly and without unnecessary refusals.";
 
+// Load saved history
 try {
   const saved = localStorage.getItem("myai-history");
   if (saved) history = JSON.parse(saved);
 } catch {}
+
+baseUrlInput.value = baseUrl;
+systemPromptInput.value = systemPrompt;
 
 function saveHistory() {
   try {
@@ -56,63 +64,62 @@ function addMessage(role, content) {
   return div;
 }
 
+function setStatus(text, type = "") {
+  statusEl.textContent = text;
+  statusEl.className = type;
+}
+
 function setUIReady(ready) {
   inputEl.disabled = !ready;
   sendBtn.disabled = !ready;
   modelSelect.disabled = !ready;
-  reloadBtn.disabled = !ready;
-  if (ready) {
-    statusEl.classList.add("status-ready");
-    inputEl.focus();
-  } else {
-    statusEl.classList.remove("status-ready");
-  }
+  if (ready) inputEl.focus();
 }
 
-async function loadModel(modelId) {
-  if (!navigator.gpu) {
-    statusEl.textContent = "WebGPU missing";
-    addMessage("system", "Your browser does not support WebGPU.\n\nOn iPad:\n• Try Chrome\n• Update to iPadOS 18+\n• Or open from a computer");
-    return;
-  }
-
-  setUIReady(false);
-  progressBar.style.width = "0%";
-  statusEl.textContent = "Loading model…";
-
+async function fetchModels() {
+  if (!baseUrl) return;
   try {
-    if (engine) {
-      try { await engine.unload(); } catch {}
-    }
+    const res = await fetch(`${baseUrl}/api/tags`);
+    if (!res.ok) throw new Error("Cannot reach Ollama");
+    const data = await res.json();
+    modelSelect.innerHTML = "";
+    if (data.models && data.models.length) {
+      data.models.forEach((m) => {
+        const opt = document.createElement("option");
+        opt.value = m.name;
+        opt.textContent = m.name;
+        modelSelect.appendChild(opt);
+      });
+      setStatus("Ready", "status-ready");
+      connectionInfo.textContent = baseUrl.replace("http://", "");
+      setUIReady(true);
 
-    engine = await CreateMLCEngine(modelId, {
-      initProgressCallback: (report) => {
-        statusEl.textContent = report.text || "Loading…";
-        if (report.progress !== undefined) {
-          progressBar.style.width = Math.round(report.progress * 100) + "%";
-        }
-      },
-    });
-
-    progressBar.style.width = "100%";
-    statusEl.textContent = "Ready";
-    setUIReady(true);
-
-    if (history.length) {
-      chatEl.innerHTML = "";
-      history.forEach((m) => addMessage(m.role, m.content));
+      // Restore history
+      if (history.length) {
+        chatEl.innerHTML = "";
+        history.forEach((m) => addMessage(m.role, m.content));
+      }
+    } else {
+      modelSelect.innerHTML = "<option>No models found</option>";
+      setStatus("No models", "status-error");
     }
   } catch (err) {
-    statusEl.textContent = "Load failed";
-    progressBar.style.width = "0%";
-    addMessage("system", "Failed to load the model.\n\nPossible causes:\n• WebGPU limited on this device\n• Not enough memory\n• Model too heavy\n\nTry a smaller model or another browser.");
+    setStatus("Connection failed", "status-error");
+    connectionInfo.textContent = "Not connected";
+    setUIReady(false);
     console.error(err);
   }
 }
 
 async function send() {
   const text = inputEl.value.trim();
-  if (!text || !engine || isGenerating) return;
+  if (!text || isGenerating || !baseUrl) return;
+
+  const model = modelSelect.value;
+  if (!model) {
+    addMessage("system", "No model selected.");
+    return;
+  }
 
   inputEl.value = "";
   inputEl.style.height = "auto";
@@ -122,24 +129,54 @@ async function send() {
 
   isGenerating = true;
   setUIReady(false);
-  statusEl.textContent = "Thinking…";
+  setStatus("Thinking…");
 
   const assistantDiv = addMessage("assistant", "…");
   let fullReply = "";
 
+  // Build messages with system prompt
+  const messages = [];
+  if (systemPrompt.trim()) {
+    messages.push({ role: "system", content: systemPrompt.trim() });
+  }
+  history.forEach((m) => messages.push({ role: m.role, content: m.content }));
+
   try {
-    const chunks = await engine.chat.completions.create({
-      messages: history,
-      stream: true,
+    const res = await fetch(`${baseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: true,
+      }),
     });
 
-    for await (const chunk of chunks) {
-      const delta = chunk.choices[0]?.delta?.content || "";
-      fullReply += delta;
-      assistantDiv.textContent = fullReply;
-      chatEl.scrollTop = chatEl.scrollHeight;
+    if (!res.ok) throw new Error("Request failed");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split("\n").filter((l) => l.trim());
+
+      for (const line of lines) {
+        try {
+          const json = JSON.parse(line);
+          if (json.message && json.message.content) {
+            fullReply += json.message.content;
+            assistantDiv.textContent = fullReply;
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+        } catch {}
+      }
     }
 
+    // Add copy button
     const actions = document.createElement("div");
     actions.className = "msg-actions";
     const copyBtn = document.createElement("button");
@@ -156,16 +193,18 @@ async function send() {
 
     history.push({ role: "assistant", content: fullReply });
     saveHistory();
+    setStatus("Ready", "status-ready");
   } catch (err) {
-    assistantDiv.textContent = "Error during generation.";
+    assistantDiv.textContent = "Error: could not reach the model.";
+    setStatus("Error", "status-error");
     console.error(err);
   }
 
   isGenerating = false;
   setUIReady(true);
-  statusEl.textContent = "Ready";
 }
 
+// Events
 inputEl.addEventListener("input", () => {
   inputEl.style.height = "auto";
   inputEl.style.height = Math.min(inputEl.scrollHeight, 130) + "px";
@@ -190,7 +229,27 @@ clearBtn.addEventListener("click", () => {
   }
 });
 
-reloadBtn.addEventListener("click", () => loadModel(modelSelect.value));
-modelSelect.addEventListener("change", () => loadModel(modelSelect.value));
+settingsBtn.addEventListener("click", () => {
+  settingsPanel.classList.toggle("open");
+});
 
-loadModel(modelSelect.value);
+closeSettingsBtn.addEventListener("click", () => {
+  settingsPanel.classList.remove("open");
+});
+
+saveSettingsBtn.addEventListener("click", () => {
+  baseUrl = baseUrlInput.value.trim().replace(/\/$/, "");
+  systemPrompt = systemPromptInput.value;
+
+  localStorage.setItem("myai-baseurl", baseUrl);
+  localStorage.setItem("myai-system", systemPrompt);
+
+  settingsPanel.classList.remove("open");
+  setStatus("Connecting…");
+  fetchModels();
+});
+
+// Auto-connect if URL already saved
+if (baseUrl) {
+  fetchModels();
+}
