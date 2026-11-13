@@ -410,3 +410,30 @@ document.querySelectorAll(".suggestion[data-prompt]").forEach((button) => {
     inputEl.focus();
   });
 });
+
+
+// Google account session (served by the Arqen backend).
+const googleAuthBtn = document.getElementById("googleAuthBtn");
+const accountLabel = document.getElementById("accountLabel");
+
+async function refreshGoogleAccount() {
+  if (!googleAuthBtn) return;
+  try {
+    const response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" });
+    if (!response.ok) throw new Error("Not signed in");
+    const data = await response.json();
+    if (!data.authenticated) throw new Error("Not signed in");
+    googleAuthBtn.textContent = "Sign out";
+    accountLabel.textContent = data.user.name || data.user.email;
+    accountLabel.style.display = "block";
+    googleAuthBtn.onclick = async () => {
+      await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
+      window.location.reload();
+    };
+  } catch {
+    accountLabel.style.display = "none";
+    googleAuthBtn.textContent = "Continue with Google";
+    googleAuthBtn.onclick = () => { window.location.href = "/auth/google"; };
+  }
+}
+refreshGoogleAccount();
