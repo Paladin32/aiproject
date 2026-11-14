@@ -5,44 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#020205">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Arqen Era</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
-:root{
-  color-scheme:dark;
-  --bg:#020205;--ink:#f4f4f8;--mute:#80829a;
-  --line:rgba(255,255,255,.08);--glass:rgba(4,4,8,.82);--h:rgba(255,255,255,.08);
-  --safe-t:env(safe-area-inset-top,0px);
-  --safe-b:env(safe-area-inset-bottom,0px);
-  --safe-l:env(safe-area-inset-left,0px);
-  --safe-r:env(safe-area-inset-right,0px);
-}
+:root{color-scheme:dark;--bg:#020205;--ink:#f4f4f8;--mute:#80829a;--line:rgba(255,255,255,.08);--glass:rgba(4,4,8,.82);--h:rgba(255,255,255,.08);--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;width:100%;overflow:hidden;position:fixed;inset:0}
-body{
-  font-family:"Instrument Sans",system-ui,-apple-system,sans-serif;
-  background:
-    radial-gradient(80% 60% at 30% 100%,#ff5e7e22,transparent),
-    radial-gradient(70% 60% at 90% 90%,#2b59ff33,transparent),
-    var(--bg);
-  color:var(--ink);
-  -webkit-font-smoothing:antialiased;
-}
+body{font-family:"Instrument Sans",system-ui,-apple-system,sans-serif;background:radial-gradient(80% 60% at 30% 100%,#ff5e7e22,transparent),radial-gradient(70% 60% at 90% 90%,#2b59ff33,transparent),var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
 .app{display:flex;height:100%;width:100%;padding-left:var(--safe-l);padding-right:var(--safe-r)}
-.side{
-  width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;
-  padding:calc(12px + var(--safe-t)) 12px calc(12px + var(--safe-b));
-  background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-right:1px solid var(--line);overflow:hidden;
-}
+.side{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:calc(12px + var(--safe-t)) 12px calc(12px + var(--safe-b));background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid var(--line);overflow:hidden}
 .brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;letter-spacing:-.03em;padding:6px;flex-shrink:0}
 .brand i{width:10px;height:10px;border-radius:50%;background:conic-gradient(#ffb347,#ff5e7e,#4d7bff,#ffb347);box-shadow:0 0 14px #ff5e7e99}
 .new{height:40px;border-radius:11px;background:#fff;color:#0a0b12;font-weight:600;width:100%;flex-shrink:0;padding:0 14px}
 .nav{flex-shrink:0}
 .nav button,.recent button{display:block;width:100%;padding:10px 12px;border-radius:10px;color:var(--mute);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav button.on,.nav button:active,.recent button:active,.recent button.on{background:var(--h);color:var(--ink)}
+.nav button.on,.nav button:active,.recent button:active{background:var(--h);color:var(--ink)}
 .recent{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .grp{font-size:11px;color:var(--mute);padding:8px 12px 4px;opacity:.7}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;overflow:hidden}
@@ -82,7 +60,7 @@ textarea::placeholder,input::placeholder{color:#80829a}
 .ta{width:100%;min-height:120px;padding:12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);resize:vertical;line-height:1.45;margin-bottom:10px}
 .sc{padding:14px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
 .sc h3{font-size:13px;margin-bottom:8px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.08);font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;background:rgba(255,255,255,.08);font-weight:600}
 .btn.p{background:#fff;color:#0a0b12}
 .btn.d{color:#ff8a9a}
 .fine{color:var(--mute);font-size:12px;text-align:center}
@@ -96,6 +74,17 @@ textarea::placeholder,input::placeholder{color:#80829a}
 .feed-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .toggle{display:flex;align-items:center;gap:8px;margin:10px 0;color:var(--mute);font-size:13px}
 .toggle input{width:18px;height:18px}
+.acct{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.av{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#ff5e7e,#4d7bff);display:grid;place-items:center;font-weight:700;font-size:20px;overflow:hidden;flex-shrink:0}
+.av img{width:100%;height:100%;object-fit:cover}
+.acct .nm{font-weight:600;font-size:18px}
+.acct .em{color:var(--mute);font-size:13px;margin-top:2px}
+.conn{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.conn .l{display:flex;align-items:center;gap:12px}
+.conn .ic{width:36px;height:36px;border-radius:9px;background:#fff;display:grid;place-items:center;flex-shrink:0}
+.conn .ic svg{width:18px;height:18px}
+.conn .st{font-size:12px;color:var(--mute)}
+.conn .st.on{color:#7dffa6}
 #modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);padding:max(2vh,var(--safe-t)) max(2vw,var(--safe-r)) max(2vh,var(--safe-b)) max(2vw,var(--safe-l))}
 #modal.on{display:flex}
 .mp{flex:1;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:#0b0b10;box-shadow:inset 0 0 0 1px #2a2a31;min-height:0}
@@ -103,10 +92,10 @@ textarea::placeholder,input::placeholder{color:#80829a}
 .mh input{flex:1;min-width:100px;height:36px;padding:0 10px;border-radius:8px;border:0;background:rgba(255,255,255,.06);color:var(--ink);font-size:16px}
 #mf{flex:1;border:0;background:#fff;min-height:0}
 @media(max-width:860px){
-  .side{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-105%);transition:transform .25s ease;width:min(300px,88vw);padding-bottom:calc(12px + var(--safe-b))}
-  .app.open .side{transform:none}
-  .app.open .scrim{display:block;position:fixed;inset:0;z-index:20;background:#0009}
-  .burger{display:grid}
+.side{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-105%);transition:transform .25s ease;width:min(300px,88vw);padding-bottom:calc(12px + var(--safe-b))}
+.app.open .side{transform:none}
+.app.open .scrim{display:block;position:fixed;inset:0;z-index:20;background:#0009}
+.burger{display:grid}
 }
 </style>
 </head>
@@ -119,6 +108,7 @@ textarea::placeholder,input::placeholder{color:#80829a}
       <button type="button" data-go="home" class="on">Home</button>
       <button type="button" data-go="chats">Chats</button>
       <button type="button" data-go="feed">Data Feed</button>
+      <button type="button" data-go="account">Account</button>
       <button type="button" data-go="settings">Settings</button>
       <button type="button" data-go="admin">Admin</button>
     </nav>
@@ -142,8 +132,11 @@ const DEFAULT_ADMIN_PASS='arqen2026';
 const FEED_MAX_CHARS=12000;
 function cfg(){try{return JSON.parse(localStorage.getItem('arqen-cfg')||'{}')}catch(e){return {}}}
 function saveCfg(c){localStorage.setItem('arqen-cfg',JSON.stringify(c))}
-let C=Object.assign({apiBase:localStorage.getItem('arqen-api-base')||DEFAULT_API,apiKey:'ollama',model:'arqen',adminPass:DEFAULT_ADMIN_PASS,style:'',feedOn:true},cfg());
+let C=Object.assign({apiBase:localStorage.getItem('arqen-api-base')||DEFAULT_API,apiKey:'ollama',model:'arqen',adminPass:DEFAULT_ADMIN_PASS,style:'',feedOn:true,googleClientId:''},cfg());
 C.apiBase=(C.apiBase||DEFAULT_API).replace(/\/$/,'');
+function ldAcc(){try{return JSON.parse(localStorage.getItem('arqen-account')||'{}')}catch(e){return {}}}
+function svAcc(a){localStorage.setItem('arqen-account',JSON.stringify(a))}
+let ACC=Object.assign({name:'',email:'',picture:'',google:false,displayName:''},ldAcc());
 function ldFeed(){try{const d=JSON.parse(localStorage.getItem('arqen-feed')||'[]');return Array.isArray(d)?d:[]}catch(e){return []}}
 function svFeed(f){localStorage.setItem('arqen-feed',JSON.stringify(f))}
 let FEED=ldFeed();
@@ -153,8 +146,10 @@ const sv=()=>{try{localStorage.setItem('arqen-era-v2',JSON.stringify(S))}catch(e
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let busy=false,ctl=null,codes=[],previewHtml='',adminOK=sessionStorage.getItem('arqen-admin')==='1';
-let streamTarget=null;
+let streamTarget=null, gisLoaded=false;
 function cur(){return S.chats.find(c=>c.id===S.cur)}
+function displayName(){return ACC.displayName||ACC.name||'Guest'}
+function initials(){const n=displayName();return (n.trim().slice(0,1)||'?').toUpperCase()}
 function feedContext(){
   if(C.feedOn===false) return '';
   const active=FEED.filter(x=>x.on!==false);
@@ -170,10 +165,11 @@ function feedContext(){
 }
 function SYS(){
   const extra=C.style?(' '+C.style):'';
+  const who=ACC.google||ACC.displayName?(' The user is named '+displayName()+'.'):'';
   const kb=feedContext();
-  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive.'+extra+kb;
-  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code.'+extra+kb;
-  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something.'+extra+kb;
+  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive.'+who+extra+kb;
+  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code.'+who+extra+kb;
+  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something.'+who+extra+kb;
 }
 function md(t){
   codes=[]; let o='';
@@ -201,7 +197,7 @@ function home(){
   $('#view').innerHTML=`<div class="home"><h1>Describe it.<br><span class="dim">Watch it ship.</span></h1>
   <div class="box"><textarea id="p" rows="2" placeholder="Say hi, ask a question, or describe an app…" enterkeyhint="send"></textarea>
   <div class="row">${modeChips()}<button type="button" class="send" id="send" aria-label="Send">↑</button></div></div>
-  <p class="fine">Ask · Plan · Build${FEED.filter(x=>x.on!==false).length?' · Knowledge on':''}</p></div>`;
+  <p class="fine">Ask · Plan · Build</p></div>`;
   wire();
 }
 function buildChatShell(c){
@@ -218,8 +214,7 @@ function renderMsgs(scrollBottom){
   const stick=scrollBottom || (ms && (ms.scrollHeight-ms.scrollTop-ms.clientHeight<80));
   mi.innerHTML=c.msgs.map((m,i)=>{
     if(m.role==='user') return `<div class="u">${esc(m.content)}</div>`;
-    const body=m.content?md(m.content):'<span class="think">Thinking…</span>';
-    return `<div class="a" data-ai="${i}">${body}</div>`;
+    return `<div class="a" data-ai="${i}">${m.content?md(m.content):'<span class="think">Thinking…</span>'}</div>`;
   }).join('');
   streamTarget=mi.querySelector('.a[data-ai]:last-of-type');
   if(ms&&stick) ms.scrollTop=ms.scrollHeight;
@@ -236,34 +231,27 @@ function feedView(){
   $('#ttl').textContent='Data Feed';
   const list=FEED.length?FEED.map((d,i)=>`<div class="feed-item">
     <div class="t">${esc(d.title)}</div>
-    <div class="m">${d.on===false?'Off · ':''}${(d.body||'').length} chars · ${new Date(d.t||Date.now()).toLocaleDateString()}</div>
+    <div class="m">${d.on===false?'Off · ':''}${(d.body||'').length} chars</div>
     <div class="x">${esc((d.body||'').slice(0,220))}</div>
     <div class="feed-actions">
       <button type="button" class="btn" data-feed-edit="${i}">Edit</button>
       <button type="button" class="btn" data-feed-toggle="${i}">${d.on===false?'Enable':'Disable'}</button>
       <button type="button" class="btn d" data-feed-del="${i}">Delete</button>
-    </div>
-  </div>`).join(''):'<p class="fine" style="text-align:left;margin:12px 0">No documents yet. Paste notes, docs, product info… Arqen will use them in chat.</p>';
-  $('#view').innerHTML=`<div class="pg">
-    <h2>Data Feed</h2>
-    <p class="sub">Feed knowledge to Arqen. Active docs are injected into the model context (up to ~12k chars).</p>
+    </div></div>`).join(''):'<p class="fine" style="text-align:left;margin:12px 0">No documents yet.</p>';
+  $('#view').innerHTML=`<div class="pg"><h2>Data Feed</h2>
+    <p class="sub">Knowledge injected into Arqen (up to ~12k chars).</p>
     <label class="toggle"><input type="checkbox" id="feedOn" ${C.feedOn!==false?'checked':''}> Use knowledge base in chat</label>
-    <div class="sc">
-      <h3>Add document</h3>
-      <input class="in" id="fTitle" placeholder="Title (e.g. Product FAQ)">
-      <textarea class="ta" id="fBody" placeholder="Paste text here…"></textarea>
+    <div class="sc"><h3>Add document</h3>
+      <input class="in" id="fTitle" placeholder="Title">
+      <textarea class="ta" id="fBody" placeholder="Paste text…"></textarea>
       <button type="button" class="btn p" id="fAdd">Add to feed</button>
     </div>
-    <div class="sc">
-      <h3>Library (${FEED.length})</h3>
-      ${list}
-    </div>
-  </div>`;
+    <div class="sc"><h3>Library (${FEED.length})</h3>${list}</div></div>`;
   $('#feedOn').onchange=()=>{C.feedOn=$('#feedOn').checked;saveCfg(C)};
   $('#fAdd').onclick=()=>{
     const title=($('#fTitle').value||'').trim()||'Untitled';
     const body=($('#fBody').value||'').trim();
-    if(!body){alert('Empty document');return}
+    if(!body){alert('Empty');return}
     FEED.unshift({id:uid(),title,body,on:true,t:Date.now()});
     svFeed(FEED); feedView();
   };
@@ -271,22 +259,109 @@ function feedView(){
 function feedEditView(i){
   const d=FEED[i]; if(!d) return feedView();
   $('#ttl').textContent='Edit document';
-  $('#view').innerHTML=`<div class="pg">
-    <h2>Edit</h2>
-    <input class="in" id="fTitle">
-    <textarea class="ta" id="fBody" style="min-height:220px"></textarea>
+  $('#view').innerHTML=`<div class="pg"><h2>Edit</h2>
+    <input class="in" id="fTitle"><textarea class="ta" id="fBody" style="min-height:220px"></textarea>
     <button type="button" class="btn p" id="fSave">Save</button>
-    <button type="button" class="btn" id="fCancel" style="margin-left:8px">Cancel</button>
-  </div>`;
-  $('#fTitle').value=d.title;
-  $('#fBody').value=d.body;
-  $('#fSave').onclick=()=>{
-    d.title=($('#fTitle').value||'').trim()||'Untitled';
-    d.body=($('#fBody').value||'').trim();
-    d.t=Date.now();
-    svFeed(FEED); feedView();
-  };
+    <button type="button" class="btn" id="fCancel" style="margin-left:8px">Cancel</button></div>`;
+  $('#fTitle').value=d.title; $('#fBody').value=d.body;
+  $('#fSave').onclick=()=>{d.title=($('#fTitle').value||'').trim()||'Untitled';d.body=($('#fBody').value||'').trim();d.t=Date.now();svFeed(FEED);feedView()};
   $('#fCancel').onclick=()=>feedView();
+}
+function parseJwt(token){
+  try{
+    const base=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(base).split('').map(c=>'%'+(('00'+c.charCodeAt(0).toString(16)).slice(-2))).join('')));
+  }catch(e){return null}
+}
+function loadGis(cb){
+  if(window.google&&window.google.accounts){cb();return}
+  if(gisLoaded){const t=setInterval(()=>{if(window.google&&window.google.accounts){clearInterval(t);cb()}},100);return}
+  gisLoaded=true;
+  const s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client';
+  s.async=true; s.onload=()=>cb();
+  s.onerror=()=>alert('Could not load Google Sign-In script');
+  document.head.appendChild(s);
+}
+function onGoogleCredential(resp){
+  const p=parseJwt(resp.credential);
+  if(!p){alert('Google login failed');return}
+  ACC.google=true;
+  ACC.name=p.name||'';
+  ACC.email=p.email||'';
+  ACC.picture=p.picture||'';
+  if(!ACC.displayName) ACC.displayName=p.name||'';
+  svAcc(ACC);
+  accountView();
+}
+function connectGoogle(){
+  const cid=(C.googleClientId||'').trim();
+  if(!cid){
+    alert('Set Google Client ID in Admin first.\n\nGoogle Cloud → APIs & Services → Credentials → OAuth 2.0 Client ID (Web).\nAuthorized JavaScript origin:\nhttps://paladin32.github.io');
+    return;
+  }
+  loadGis(()=>{
+    try{
+      google.accounts.id.initialize({client_id:cid,callback:onGoogleCredential,auto_select:false});
+      google.accounts.id.prompt((n)=>{
+        if(n&&(n.isNotDisplayed()||n.isSkippedMoment()||n.isDismissedMoment())){
+          const host=document.createElement('div');
+          host.style.cssText='position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.65);display:grid;place-items:center';
+          host.innerHTML='<div id="gsiBtn" style="background:#111;padding:20px;border-radius:12px"></div><button type="button" id="gsiX" style="margin-top:12px;color:#fff">Close</button>';
+          document.body.appendChild(host);
+          google.accounts.id.renderButton(host.querySelector('#gsiBtn'),{theme:'outline',size:'large',width:280});
+          host.querySelector('#gsiX').onclick=()=>host.remove();
+        }
+      });
+    }catch(e){alert('Google Sign-In error: '+(e.message||e))}
+  });
+}
+function disconnectGoogle(){
+  ACC.google=false; ACC.email=''; ACC.picture=''; ACC.name=ACC.displayName||'';
+  svAcc(ACC);
+  if(window.google&&google.accounts&&google.accounts.id) try{google.accounts.id.disableAutoSelect()}catch(e){}
+  accountView();
+}
+function accountView(){
+  streamTarget=null;
+  $('#ttl').textContent='Account';
+  const av=ACC.picture?'<img src="'+esc(ACC.picture)+'" alt="">':esc(initials());
+  $('#view').innerHTML=`<div class="pg">
+    <h2>Account</h2>
+    <p class="sub">Profile and connected services.</p>
+    <div class="sc">
+      <div class="acct">
+        <div class="av">${av}</div>
+        <div>
+          <div class="nm">${esc(displayName())}</div>
+          <div class="em">${esc(ACC.email||'Not signed in with Google')}</div>
+        </div>
+      </div>
+      <h3>Display name</h3>
+      <input class="in" id="dispName" placeholder="Your name">
+      <button type="button" class="btn p" id="saveName">Save name</button>
+    </div>
+    <div class="sc">
+      <h3>Connected accounts</h3>
+      <div class="conn">
+        <div class="l">
+          <div class="ic"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></div>
+          <div>
+            <div style="font-weight:600">Google</div>
+            <div class="st ${ACC.google?'on':''}">${ACC.google?'Connected · '+esc(ACC.email):'Not connected'}</div>
+          </div>
+        </div>
+        ${ACC.google
+          ?'<button type="button" class="btn d" id="gDisc">Disconnect</button>'
+          :'<button type="button" class="btn p" id="gConn">Connect</button>'}
+      </div>
+    </div>
+    <p class="fine" style="text-align:left">Google Client ID is set in Admin. Origin must include https://paladin32.github.io</p>
+  </div>`;
+  $('#dispName').value=ACC.displayName||ACC.name||'';
+  $('#saveName').onclick=()=>{ACC.displayName=($('#dispName').value||'').trim();svAcc(ACC);accountView()};
+  const gc=$('#gConn'); if(gc) gc.onclick=connectGoogle;
+  const gd=$('#gDisc'); if(gd) gd.onclick=disconnectGoogle;
 }
 function settingsView(){
   streamTarget=null;
@@ -295,7 +370,7 @@ function settingsView(){
   <div class="sc"><h3>Your instructions</h3>
     <textarea id="style" class="ta" placeholder="Optional tone / preferences…"></textarea>
   </div>
-  <p class="fine">API & model → Admin. Knowledge → Data Feed.</p>
+  <p class="fine">API → Admin · Knowledge → Data Feed · Profile → Account</p>
   </div>`;
   $('#style').value=C.style||'';
   $('#style').oninput=()=>{C.style=$('#style').value;saveCfg(C)};
@@ -323,15 +398,19 @@ function adminView(){
   <div class="sc"><h3>Backend API URL</h3><input class="in" id="apiBase" autocomplete="off"></div>
   <div class="sc"><h3>Model name</h3><input class="in" id="model" autocomplete="off"></div>
   <div class="sc"><h3>API key</h3><input class="in" id="apiKey" autocomplete="off"></div>
+  <div class="sc"><h3>Google Client ID</h3><input class="in" id="gCid" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off">
+    <p class="fine" style="text-align:left;margin-top:8px">Google Cloud → Credentials → OAuth Web client. JS origin: https://paladin32.github.io</p>
+  </div>
   <div class="sc"><h3>Admin password</h3><input class="in" id="newPass" type="password" placeholder="New password"></div>
   <button type="button" class="btn p" id="admSave">Save</button>
   <button type="button" class="btn" id="admLock" style="margin-left:8px">Lock</button>
   </div>`;
-  $('#apiBase').value=C.apiBase; $('#model').value=C.model; $('#apiKey').value=C.apiKey;
+  $('#apiBase').value=C.apiBase; $('#model').value=C.model; $('#apiKey').value=C.apiKey; $('#gCid').value=C.googleClientId||'';
   $('#admSave').onclick=()=>{
     C.apiBase=$('#apiBase').value.trim().replace(/\/$/,'');
     C.model=$('#model').value.trim()||'arqen';
     C.apiKey=$('#apiKey').value.trim()||'ollama';
+    C.googleClientId=$('#gCid').value.trim();
     const np=$('#newPass').value; if(np) C.adminPass=np;
     saveCfg(C); localStorage.setItem('arqen-api-base',C.apiBase); alert('Saved');
   };
@@ -417,7 +496,7 @@ document.addEventListener('click',e=>{
   const ft=e.target.closest('[data-feed-toggle]');
   if(ft){const i=+ft.dataset.feedToggle; FEED[i].on=FEED[i].on===false?true:false; svFeed(FEED); feedView(); return}
   const fd=e.target.closest('[data-feed-del]');
-  if(fd){if(confirm('Delete this document?')){FEED.splice(+fd.dataset.feedDel,1); svFeed(FEED); feedView()} return}
+  if(fd){if(confirm('Delete?')){FEED.splice(+fd.dataset.feedDel,1); svFeed(FEED); feedView()} return}
   const b=e.target.closest('[data-go],[data-open],[data-del],#newChat,#burger,#scrim,#mX,#mDl');
   if(!b) return;
   if(b.id==='newChat'){S.cur=null;sv();home();side();closeSide()}
@@ -428,6 +507,7 @@ document.addEventListener('click',e=>{
   if(b.dataset.go==='home'){S.cur=null;home();side();closeSide()}
   if(b.dataset.go==='chats'){chatsView();closeSide()}
   if(b.dataset.go==='feed'){feedView();closeSide()}
+  if(b.dataset.go==='account'){accountView();closeSide()}
   if(b.dataset.go==='settings'){settingsView();closeSide()}
   if(b.dataset.go==='admin'){adminView();closeSide()}
   if(b.dataset.open){S.cur=b.dataset.open;sv();buildChatShell(cur());renderMsgs(true);side();closeSide()}
