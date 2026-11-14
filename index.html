@@ -12,14 +12,14 @@
 :root{
   color-scheme:dark;
   --bg:#020205;--ink:#f4f4f8;--mute:#80829a;
-  --line:rgba(255,255,255,.08);--glass:rgba(4,4,8,.78);--h:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.08);--glass:rgba(4,4,8,.82);--h:rgba(255,255,255,.08);
   --safe-t:env(safe-area-inset-top,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-l:env(safe-area-inset-left,0px);
   --safe-r:env(safe-area-inset-right,0px);
 }
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;height:100dvh;overscroll-behavior:none}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;overflow:hidden;position:fixed;inset:0}
 body{
   font-family:"Instrument Sans",system-ui,-apple-system,sans-serif;
   background:
@@ -27,131 +27,75 @@ body{
     radial-gradient(70% 60% at 90% 90%,#2b59ff33,transparent),
     var(--bg);
   color:var(--ink);
-  overflow:hidden;
   -webkit-font-smoothing:antialiased;
-  touch-action:manipulation;
 }
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
-button,a,.chip,.send,.new{touch-action:manipulation}
-.app{
-  display:grid;grid-template-columns:256px 1fr;
-  height:100%;height:100dvh;
-  padding-left:var(--safe-l);padding-right:var(--safe-r);
-}
+.app{display:flex;height:100%;width:100%;padding-left:var(--safe-l);padding-right:var(--safe-r)}
 .side{
-  display:flex;flex-direction:column;gap:12px;
-  padding:calc(14px + var(--safe-t)) 12px 14px;
+  width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;
+  padding:calc(12px + var(--safe-t)) 12px calc(12px + var(--safe-b));
   background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-right:1px solid var(--line);min-height:0;overflow:hidden;
+  border-right:1px solid var(--line);overflow:hidden;
 }
-.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;letter-spacing:-.03em;padding:4px 6px;flex-shrink:0}
-.brand i{width:11px;height:11px;border-radius:50%;background:conic-gradient(#ffb347,#ff5e7e,#4d7bff,#ffb347);box-shadow:0 0 16px #ff5e7e99;flex-shrink:0}
-.new{height:40px;padding:0 14px;border-radius:11px;background:#fff;color:#0a0b12;font-weight:600;width:100%;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;letter-spacing:-.03em;padding:6px;flex-shrink:0}
+.brand i{width:10px;height:10px;border-radius:50%;background:conic-gradient(#ffb347,#ff5e7e,#4d7bff,#ffb347);box-shadow:0 0 14px #ff5e7e99}
+.new{height:40px;border-radius:11px;background:#fff;color:#0a0b12;font-weight:600;width:100%;flex-shrink:0;padding:0 14px}
 .nav{flex-shrink:0}
-.nav button,.recent button{
-  display:block;width:100%;padding:10px 12px;border-radius:10px;color:var(--mute);font-weight:500;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.nav button:hover,.recent button:hover,.nav button.on,.recent button.on{background:var(--h);color:var(--ink)}
-.recent{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.grp{font-size:12px;color:var(--mute);padding:8px 12px 4px;opacity:.75;position:sticky;top:0;background:rgba(4,4,8,.9);backdrop-filter:blur(8px)}
-.main{display:flex;flex-direction:column;min-width:0;height:100%;min-height:0;overflow:hidden}
-.top{
-  height:calc(52px + var(--safe-t));padding:var(--safe-t) 16px 0;
-  display:flex;align-items:center;font-weight:600;gap:8px;flex-shrink:0;
-}
-#view{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
-.home{
-  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:24px;padding:16px 16px calc(16px + var(--safe-b));
-}
-h1{font-size:clamp(36px,9vw,88px);font-weight:600;letter-spacing:-.05em;line-height:.95;text-align:center}
-h1 .dim{color:rgba(255,255,255,.45)}
-.box{
-  width:min(720px,100%);border-radius:20px;background:var(--glass);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  padding:14px;box-shadow:inset 0 0 0 1px var(--line);
-}
-textarea{
-  width:100%;border:0;background:none;resize:none;color:var(--ink);
-  font:inherit;font-size:16px;line-height:1.5;outline:0;
-  min-height:48px;max-height:160px;
-}
+.nav button,.recent button{display:block;width:100%;padding:10px 12px;border-radius:10px;color:var(--mute);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav button.on,.nav button:active,.recent button:active,.recent button.on{background:var(--h);color:var(--ink)}
+.recent{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
+.grp{font-size:11px;color:var(--mute);padding:8px 12px 4px;opacity:.7}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.top{flex-shrink:0;height:calc(50px + var(--safe-t));padding-top:var(--safe-t);padding-left:12px;padding-right:12px;display:flex;align-items:center;gap:8px;font-weight:600}
+.burger{display:none;width:40px;height:40px;place-items:center;border-radius:10px;color:var(--mute)}
+#view{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.home{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+h1{font-size:clamp(34px,9vw,80px);font-weight:600;letter-spacing:-.05em;line-height:.95;text-align:center}
+h1 .dim{color:rgba(255,255,255,.42)}
+.box{width:min(700px,100%);border-radius:18px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px;box-shadow:inset 0 0 0 1px var(--line)}
+textarea{width:100%;border:0;background:none;resize:none;color:var(--ink);font:inherit;font-size:16px;line-height:1.45;outline:0;min-height:44px;max-height:140px}
 textarea::placeholder{color:#80829a}
-.row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-.chip{height:34px;padding:0 12px;border-radius:10px;color:var(--mute);font-weight:600;font-size:13px;flex-shrink:0}
-.chip:hover,.chip.on{background:var(--h);color:var(--ink)}
-.send{
-  width:38px;height:38px;border-radius:50%;background:#fff;color:#0a0b12;
-  display:grid;place-items:center;margin-left:auto;opacity:.35;flex-shrink:0;
-}
+.row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{height:32px;padding:0 12px;border-radius:9px;color:var(--mute);font-weight:600;font-size:13px}
+.chip.on{background:var(--h);color:var(--ink)}
+.send{width:36px;height:36px;border-radius:50%;background:#fff;color:#0a0b12;display:grid;place-items:center;margin-left:auto;opacity:.35}
 .send.ready{opacity:1}
-.chat{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
-.msgs{
-  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-  padding:8px 16px 12px;scroll-behavior:smooth;
-}
-.mi{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-bottom:8px}
-.u{
-  align-self:flex-end;max-width:min(85%,520px);
-  background:rgba(255,255,255,.09);padding:10px 14px;
-  border-radius:16px 16px 4px 16px;white-space:pre-wrap;line-height:1.5;
-  word-break:break-word;
-}
-.a{line-height:1.65;color:#dcdce6;white-space:pre-wrap;word-break:break-word}
-.a p{margin:0 0 .6em}.a p:last-child{margin:0}
+.chat{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.msgs{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:8px 14px 10px}
+.mi{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.u{align-self:flex-end;max-width:min(88%,500px);background:rgba(255,255,255,.09);padding:10px 14px;border-radius:16px 16px 4px 16px;white-space:pre-wrap;line-height:1.5;word-break:break-word}
+.a{line-height:1.6;color:#dcdce6;word-break:break-word}
+.a p{margin:0 0 .55em}.a p:last-child{margin:0}
 .a code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px}
 .think{color:var(--mute)}
-.cb{margin:12px 0;border-radius:12px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.cb{margin:10px 0;border-radius:12px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
 .ch{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;color:var(--mute);font-size:12px;border-bottom:1px solid var(--line);gap:8px}
 .ch button{padding:4px 9px;border-radius:7px;color:var(--ink);font-weight:600}
-.cb pre{padding:12px 14px;overflow:auto;max-height:min(40vh,320px);-webkit-overflow-scrolling:touch}
-.cb pre code{background:none;padding:0;color:#c9cadb;font-size:12.5px;line-height:1.55;white-space:pre}
-.cin{
-  flex-shrink:0;padding:0 16px calc(12px + var(--safe-b));
-  display:flex;justify-content:center;
-  background:linear-gradient(transparent,rgba(2,2,5,.85) 30%);
-}
-.pg{
-  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  max-width:820px;width:100%;margin:0 auto;
-  padding:12px 18px calc(40px + var(--safe-b));
-}
-.pg h2{font-size:26px;font-weight:600;margin-bottom:14px}
-.in{
-  width:100%;height:44px;padding:0 12px;border-radius:11px;border:0;
-  background:rgba(255,255,255,.05);color:var(--ink);
-  box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px;font-size:16px;
-}
-.sc{padding:16px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
-.sc h3{font-size:14px;margin-bottom:10px}
-.btn{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.08);font-weight:600}
+.cb pre{padding:12px;overflow:auto;max-height:min(36vh,280px);-webkit-overflow-scrolling:touch}
+.cb pre code{background:none;padding:0;color:#c9cadb;font-size:12.5px;line-height:1.5;white-space:pre}
+.cin{flex-shrink:0;padding:0 14px calc(10px + var(--safe-b));display:flex;justify-content:center}
+.pg{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + var(--safe-b));max-width:820px;width:100%;margin:0 auto}
+.pg h2{font-size:24px;font-weight:600;margin-bottom:14px}
+.in{width:100%;height:44px;padding:0 12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:10px;font-size:16px}
+.sc{padding:14px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
+.sc h3{font-size:13px;margin-bottom:8px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.08);font-weight:600}
 .btn.p{background:#fff;color:#0a0b12}
-.fine{margin-top:8px;text-align:center;color:var(--mute);font-size:12px}
+.fine{color:var(--mute);font-size:12px;text-align:center}
 .scrim{display:none}
-#modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:max(2vh,var(--safe-t)) max(2vw,var(--safe-r)) max(2vh,var(--safe-b)) max(2vw,var(--safe-l))}
+.lock{max-width:360px;margin:40px auto;padding:20px}
+.lock p{color:var(--mute);margin-bottom:12px;line-height:1.5}
+#modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);padding:max(2vh,var(--safe-t)) max(2vw,var(--safe-r)) max(2vh,var(--safe-b)) max(2vw,var(--safe-l))}
 #modal.on{display:flex}
-.mp{flex:1;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:#0b0b10;box-shadow:inset 0 0 0 1px #2a2a31;min-height:0}
-.mh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;flex-shrink:0}
-.mh input{flex:1;min-width:120px;height:36px;padding:0 10px;border-radius:8px;border:0;background:rgba(255,255,255,.06);color:var(--ink);font-size:16px}
+.mp{flex:1;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:#0b0b10;box-shadow:inset 0 0 0 1px #2a2a31;min-height:0}
+.mh{display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap}
+.mh input{flex:1;min-width:100px;height:36px;padding:0 10px;border-radius:8px;border:0;background:rgba(255,255,255,.06);color:var(--ink);font-size:16px}
 #mf{flex:1;border:0;background:#fff;min-height:0}
 @media(max-width:860px){
-  .app{grid-template-columns:1fr}
-  .side{
-    position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:20;
-    transform:translateX(-105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
-    background:rgba(3,3,6,.98);padding-bottom:calc(14px + var(--safe-b));
-  }
+  .side{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-105%);transition:transform .25s ease;width:min(300px,88vw);padding-bottom:calc(12px + var(--safe-b))}
   .app.open .side{transform:none}
-  .app.open .scrim{display:block;position:fixed;inset:0;z-index:10;background:#0008}
-  .burger{display:grid;width:40px;height:40px;place-items:center;border-radius:10px;color:var(--mute);flex-shrink:0}
-  .home h1{font-size:clamp(32px,11vw,64px)}
-}
-@media(min-width:861px){.burger{display:none}}
-@media(prefers-reduced-motion:reduce){
-  *{scroll-behavior:auto!important;transition:none!important}
+  .app.open .scrim{display:block;position:fixed;inset:0;z-index:20;background:#0009}
+  .burger{display:grid}
 }
 </style>
 </head>
@@ -159,40 +103,47 @@ textarea::placeholder{color:#80829a}
 <div class="app" id="app">
   <aside class="side">
     <div class="brand"><i></i>Arqen Era</div>
-    <button class="new" id="newChat">New chat</button>
+    <button type="button" class="new" id="newChat">New chat</button>
     <nav class="nav">
-      <button data-go="home" class="on">Home</button>
-      <button data-go="chats">Chats</button>
-      <button data-go="settings">Settings</button>
+      <button type="button" data-go="home" class="on">Home</button>
+      <button type="button" data-go="chats">Chats</button>
+      <button type="button" data-go="settings">Settings</button>
+      <button type="button" data-go="admin">Admin</button>
     </nav>
     <div class="recent" id="rec"></div>
   </aside>
   <div class="scrim" id="scrim"></div>
   <main class="main">
     <header class="top">
-      <button class="burger" id="burger" aria-label="Menu">☰</button>
+      <button type="button" class="burger" id="burger" aria-label="Menu">☰</button>
       <span id="ttl">New chat</span>
     </header>
     <div id="view"></div>
   </main>
 </div>
-<div id="modal"><div class="mp"><div class="mh"><input id="mName" placeholder="Project name"><button class="btn p" id="mSave">Save</button><button class="btn" id="mDl">Download</button><button class="btn" id="mX">Close</button></div><iframe id="mf" title="Preview" sandbox="allow-scripts allow-forms allow-modals"></iframe></div></div>
+<div id="modal"><div class="mp"><div class="mh"><input id="mName" placeholder="Project name"><button type="button" class="btn p" id="mSave">Save</button><button type="button" class="btn" id="mDl">Download</button><button type="button" class="btn" id="mX">Close</button></div><iframe id="mf" title="Preview" sandbox="allow-scripts allow-forms allow-modals"></iframe></div></div>
 <script>
 (function(){
 const $=s=>document.querySelector(s);
-let API_BASE=(localStorage.getItem('arqen-api-base')||'https://lightning-console-sierra-audience.trycloudflare.com/v1').replace(/\/$/,'');
-const API_KEY='ollama', API_MODEL='arqen';
-function ld(){try{const d=JSON.parse(localStorage.getItem('arqen-era-v2'));if(d&&d.chats)return d}catch(e){}return{chats:[],cur:null,use:'ask',style:''}}
-let S=ld(); if(!S.use) S.use='ask';
+const DEFAULT_API='https://lightning-console-sierra-audience.trycloudflare.com/v1';
+const DEFAULT_ADMIN_PASS='arqen2026';
+function cfg(){try{return JSON.parse(localStorage.getItem('arqen-cfg')||'{}')}catch(e){return {}}}
+function saveCfg(c){localStorage.setItem('arqen-cfg',JSON.stringify(c))}
+let C=Object.assign({apiBase:localStorage.getItem('arqen-api-base')||DEFAULT_API,apiKey:'ollama',model:'arqen',adminPass:DEFAULT_ADMIN_PASS,style:''},cfg());
+C.apiBase=(C.apiBase||DEFAULT_API).replace(/\/$/,'');
+function ld(){try{const d=JSON.parse(localStorage.getItem('arqen-era-v2'));if(d&&d.chats)return d}catch(e){}return{chats:[],cur:null,use:'ask'}}
+let S=ld(); if(!S.use)S.use='ask';
 const sv=()=>{try{localStorage.setItem('arqen-era-v2',JSON.stringify(S))}catch(e){}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-let busy=false,ctl=null,codes=[],previewHtml='';
+let busy=false,ctl=null,codes=[],previewHtml='',adminOK=sessionStorage.getItem('arqen-admin')==='1';
+let streamTarget=null;
 function cur(){return S.chats.find(c=>c.id===S.cur)}
 function SYS(){
-  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive. '+(S.style||'');
-  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code. '+(S.style||'');
-  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something. '+(S.style||'');
+  const extra=C.style?(' '+C.style):'';
+  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive.'+extra;
+  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code.'+extra;
+  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something.'+extra;
 }
 function md(t){
   codes=[]; let o='';
@@ -201,106 +152,170 @@ function md(t){
     else {
       const m=s.match(/^([\w+-]*)\n?([\s\S]*)$/), l=m[1]||'code', body=m[2];
       codes.push(body); const n=codes.length-1;
-      o+='<div class="cb"><div class="ch"><span>'+esc(l)+'</span><span><button data-copy="'+n+'">Copy</button>'+(/^html?$/i.test(l)?'<button data-prev="'+n+'">Preview</button>':'')+'</span></div><pre><code>'+esc(body)+'</code></pre></div>';
+      o+='<div class="cb"><div class="ch"><span>'+esc(l)+'</span><span><button type="button" data-copy="'+n+'">Copy</button>'+(/^html?$/i.test(l)?'<button type="button" data-prev="'+n+'">Preview</button>':'')+'</span></div><pre><code>'+esc(body)+'</code></pre></div>';
     }
   });
-  return o||esc(t);
+  return o||('<p>'+esc(t)+'</p>');
 }
 function side(){
-  const a=S.chats.slice(0,12);
-  $('#rec').innerHTML=a.length?'<div class="grp">Recent</div>'+a.map(c=>`<button data-open="${c.id}">${esc(c.title)}</button>`).join(''):'';
+  const a=S.chats.slice(0,16);
+  $('#rec').innerHTML=a.length?'<div class="grp">Recent</div>'+a.map(c=>`<button type="button" data-open="${c.id}">${esc(c.title)}</button>`).join(''):'';
 }
 function modeChips(){
   return ['ask','plan','build'].map(m=>`<button type="button" class="chip${S.use===m?' on':''}" data-use="${m}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('');
 }
+function closeSide(){$('#app').classList.remove('open')}
 function home(){
+  streamTarget=null;
   $('#ttl').textContent='New chat';
   $('#view').innerHTML=`<div class="home"><h1>Describe it.<br><span class="dim">Watch it ship.</span></h1>
   <div class="box"><textarea id="p" rows="2" placeholder="Say hi, ask a question, or describe an app…" enterkeyhint="send"></textarea>
   <div class="row">${modeChips()}<button type="button" class="send" id="send" aria-label="Send">↑</button></div></div>
-  <p class="fine">Ask = chat · Plan = outline · Build = code</p></div>`;
+  <p class="fine">Ask · Plan · Build</p></div>`;
   wire();
 }
-function chatView(opts){
-  const c=cur(); if(!c){home();return}
-  const stick=opts&&opts.stick;
-  const msEl=$('#ms');
-  const nearBottom=!msEl||(msEl.scrollHeight-msEl.scrollTop-msEl.clientHeight<120);
-  $('#ttl').textContent=c.title;
-  const msgs=c.msgs.map(m=>m.role==='user'?`<div class="u">${esc(m.content)}</div>`:`<div class="a">${m.content?md(m.content):'<span class="think">Thinking…</span>'}</div>`).join('');
-  $('#view').innerHTML=`<div class="chat"><div class="msgs" id="ms"><div class="mi">${msgs}</div></div>
+function buildChatShell(c){
+  $('#ttl').textContent=c.title||'Chat';
+  $('#view').innerHTML=`<div class="chat"><div class="msgs" id="ms"><div class="mi" id="mi"></div></div>
   <div class="cin"><div class="box"><textarea id="p" rows="2" placeholder="Reply…" enterkeyhint="send"></textarea>
   <div class="row">${modeChips()}<button type="button" class="send" id="send" aria-label="Send">↑</button></div></div></div></div>`;
   wire();
+}
+function renderMsgs(scrollBottom){
+  const c=cur(); if(!c) return;
+  const mi=$('#mi'); if(!mi) return;
   const ms=$('#ms');
-  if(ms&&(stick||nearBottom||opts&&opts.force)) ms.scrollTop=ms.scrollHeight;
+  const stick=scrollBottom || (ms && (ms.scrollHeight-ms.scrollTop-ms.clientHeight<80));
+  mi.innerHTML=c.msgs.map((m,i)=>{
+    if(m.role==='user') return `<div class="u">${esc(m.content)}</div>`;
+    const body=m.content?md(m.content):'<span class="think">Thinking…</span>';
+    return `<div class="a" data-ai="${i}">${body}</div>`;
+  }).join('');
+  streamTarget=mi.querySelector('.a[data-ai]:last-of-type');
+  if(ms&&stick) ms.scrollTop=ms.scrollHeight;
 }
 function chatsView(){
+  streamTarget=null;
   $('#ttl').textContent='Chats';
   $('#view').innerHTML=`<div class="pg"><h2>Chats</h2>${S.chats.length?S.chats.map(c=>`<div style="display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:12px 0">
-    <button type="button" style="flex:1;font-weight:600;text-align:left" data-open="${c.id}">${esc(c.title)}</button>
-    <button type="button" class="btn" data-del="${c.id}" aria-label="Delete">×</button></div>`).join(''):'<p style="color:var(--mute)">No chats yet.</p>'}</div>`;
+    <button type="button" style="flex:1;font-weight:600" data-open="${c.id}">${esc(c.title)}</button>
+    <button type="button" class="btn" data-del="${c.id}">×</button></div>`).join(''):'<p class="fine">No chats yet.</p>'}</div>`;
 }
 function settingsView(){
+  streamTarget=null;
   $('#ttl').textContent='Settings';
   $('#view').innerHTML=`<div class="pg"><h2>Settings</h2>
-  <div class="sc"><h3>Backend API URL</h3>
-    <input class="in" id="apiBase" placeholder="https://.../v1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <button type="button" class="btn p" id="apiSave">Save</button>
+  <div class="sc"><h3>Your instructions</h3>
+    <textarea id="style" style="width:100%;min-height:100px;background:rgba(255,255,255,.05);border:0;border-radius:11px;padding:12px;color:var(--ink);font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--line)" placeholder="Optional tone / preferences…"></textarea>
   </div>
-  <div class="sc"><h3>Instructions</h3>
-    <textarea id="style" style="width:100%;min-height:90px;background:rgba(255,255,255,.05);border:0;border-radius:11px;padding:12px;color:var(--ink);font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--line)" placeholder="Optional custom instructions…"></textarea>
-  </div></div>`;
-  $('#apiBase').value=API_BASE; $('#style').value=S.style||'';
-  $('#apiSave').onclick=()=>{API_BASE=$('#apiBase').value.trim().replace(/\/$/,'');localStorage.setItem('arqen-api-base',API_BASE);alert('Saved')};
-  $('#style').oninput=()=>{S.style=$('#style').value;sv()};
+  <p class="fine">API & model settings are in Admin (password protected).</p>
+  </div>`;
+  $('#style').value=C.style||'';
+  $('#style').oninput=()=>{C.style=$('#style').value;saveCfg(C)};
+}
+function adminView(){
+  streamTarget=null;
+  $('#ttl').textContent='Admin';
+  if(!adminOK){
+    $('#view').innerHTML=`<div class="pg lock"><h2>Admin</h2>
+      <p>Only you and your collaborator. Enter the admin password.</p>
+      <input class="in" id="admPass" type="password" placeholder="Password" enterkeyhint="go">
+      <button type="button" class="btn p" id="admGo">Unlock</button>
+      <p class="fine" style="margin-top:14px">Default: arqen2026 — change it after unlock.</p>
+    </div>`;
+    const go=()=>{
+      const v=$('#admPass').value;
+      if(v===C.adminPass||v===DEFAULT_ADMIN_PASS){adminOK=true;sessionStorage.setItem('arqen-admin','1');adminView()}
+      else alert('Wrong password');
+    };
+    $('#admGo').onclick=go;
+    $('#admPass').onkeydown=e=>{if(e.key==='Enter')go()};
+    return;
+  }
+  $('#view').innerHTML=`<div class="pg"><h2>Admin</h2>
+  <div class="sc"><h3>Backend API URL</h3>
+    <input class="in" id="apiBase" placeholder="https://….trycloudflare.com/v1" autocomplete="off">
+  </div>
+  <div class="sc"><h3>Model name</h3>
+    <input class="in" id="model" placeholder="arqen" autocomplete="off">
+  </div>
+  <div class="sc"><h3>API key</h3>
+    <input class="in" id="apiKey" placeholder="ollama" autocomplete="off">
+  </div>
+  <div class="sc"><h3>Admin password</h3>
+    <input class="in" id="newPass" type="password" placeholder="New password">
+  </div>
+  <button type="button" class="btn p" id="admSave">Save</button>
+  <button type="button" class="btn" id="admLock" style="margin-left:8px">Lock</button>
+  <p class="fine" style="margin-top:16px;text-align:left">When the Cloudflare tunnel URL changes, update Backend API URL here. Both of you use the same password.</p>
+  </div>`;
+  $('#apiBase').value=C.apiBase;
+  $('#model').value=C.model;
+  $('#apiKey').value=C.apiKey;
+  $('#admSave').onclick=()=>{
+    C.apiBase=$('#apiBase').value.trim().replace(/\/$/,'');
+    C.model=$('#model').value.trim()||'arqen';
+    C.apiKey=$('#apiKey').value.trim()||'ollama';
+    const np=$('#newPass').value;
+    if(np) C.adminPass=np;
+    saveCfg(C);
+    localStorage.setItem('arqen-api-base',C.apiBase);
+    alert('Saved');
+  };
+  $('#admLock').onclick=()=>{adminOK=false;sessionStorage.removeItem('arqen-admin');adminView()};
 }
 function wire(){
   const p=$('#p'), s=$('#send'); if(!p) return;
-  const sync=()=>{p.style.height='auto';p.style.height=Math.min(p.scrollHeight,160)+'px';s.classList.toggle('ready',!!p.value.trim()||busy)};
+  const sync=()=>{p.style.height='auto';p.style.height=Math.min(p.scrollHeight,140)+'px';s.classList.toggle('ready',!!p.value.trim()||busy)};
   p.oninput=sync; sync();
   const go=()=>{const v=p.value.trim(); if(!v||busy)return; p.value='';sync(); ask(v)};
   p.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();go()}};
-  s.onclick=()=>{if(busy&&ctl)ctl.abort(); else go()};
-  p.addEventListener('focus',()=>{setTimeout(()=>{const ms=$('#ms'); if(ms) ms.scrollTop=ms.scrollHeight},300)});
+  s.onclick=()=>{if(busy&&ctl){ctl.abort();return} go()};
 }
+function scrollMsgs(){const ms=$('#ms'); if(ms) ms.scrollTop=ms.scrollHeight}
 async function ask(t){
   let c=cur();
   if(!c){c={id:uid(),title:t.slice(0,48),msgs:[],t:Date.now()};S.chats.unshift(c);S.cur=c.id}
   c.msgs.push({role:'user',content:t}); c.t=Date.now(); sv();
   const m={role:'assistant',content:''}; c.msgs.push(m);
-  busy=true; ctl=new AbortController(); chatView({force:1}); side();
+  busy=true; ctl=new AbortController();
+  if(!$('#mi')) buildChatShell(c);
+  renderMsgs(true); side();
   const messages=[{role:'system',content:SYS()},...c.msgs.slice(0,-1).map(x=>({role:x.role,content:x.content}))];
-  const headers={'Content-Type':'application/json','Authorization':'Bearer '+API_KEY};
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+C.apiKey};
   try{
     try{
-      const res=await fetch(API_BASE+'/chat/completions',{
-        method:'POST', headers, body:JSON.stringify({model:API_MODEL,messages,stream:true}), signal:ctl.signal
+      const res=await fetch(C.apiBase+'/chat/completions',{
+        method:'POST', headers, body:JSON.stringify({model:C.model,messages,stream:true}), signal:ctl.signal
       });
       if(!res.ok) throw new Error('HTTP '+res.status);
       if(!res.body||!res.body.getReader) throw new Error('no-stream');
       const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
-      let lastPaint=0;
+      let last=0;
       while(true){
         const {done,value}=await reader.read();
         if(done) break;
         buf+=dec.decode(value,{stream:true});
         const lines=buf.split('\n'); buf=lines.pop()||'';
-        let changed=false;
+        let ch=false;
         for(const line of lines){
           const row=line.trim(); if(!row.startsWith('data:')) continue;
           const payload=row.slice(5).trim(); if(payload==='[DONE]') continue;
-          try{const j=JSON.parse(payload); const d=j.choices?.[0]?.delta?.content||''; if(d){m.content+=d; changed=true}}catch(e){}
+          try{const j=JSON.parse(payload); const d=j.choices?.[0]?.delta?.content||''; if(d){m.content+=d; ch=true}}catch(e){}
         }
-        if(changed){
+        if(ch){
           const now=performance.now();
-          if(now-lastPaint>40){ lastPaint=now; chatView({stick:1}); }
+          if(now-last>50){
+            last=now;
+            if(streamTarget){ streamTarget.innerHTML=m.content?md(m.content):'<span class="think">Thinking…</span>'; scrollMsgs(); }
+            else renderMsgs(true);
+          }
         }
       }
     }catch(streamErr){
       if(streamErr.name==='AbortError') throw streamErr;
-      const res=await fetch(API_BASE+'/chat/completions',{
-        method:'POST', headers, body:JSON.stringify({model:API_MODEL,messages,stream:false}), signal:ctl.signal
+      const res=await fetch(C.apiBase+'/chat/completions',{
+        method:'POST', headers, body:JSON.stringify({model:C.model,messages,stream:false}), signal:ctl.signal
       });
       if(!res.ok){const body=await res.text().catch(()=>''); throw new Error('HTTP '+res.status+(body?': '+body.slice(0,120):''));}
       const j=await res.json();
@@ -309,11 +324,13 @@ async function ask(t){
     m.content=(m.content||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
   }catch(e){
     if(e.name!=='AbortError'){
-      const msg=e&&e.message?e.message:'Network error';
-      m.content='Could not reach the model.\n\n'+msg+'\n\nCheck: tunnel online? Settings → API URL correct?';
+      m.content='Could not reach the model.\n\n'+(e.message||'Network error')+'\n\nCheck Admin → Backend API URL (tunnel online?).';
     }
   }
-  busy=false; sv(); chatView({force:1}); side();
+  busy=false; sv();
+  if(streamTarget) streamTarget.innerHTML=m.content?md(m.content):'';
+  else renderMsgs(true);
+  scrollMsgs(); side();
 }
 document.addEventListener('click',e=>{
   const use=e.target.closest('[data-use]');
@@ -322,23 +339,20 @@ document.addEventListener('click',e=>{
   if(cp){navigator.clipboard.writeText(codes[+cp.dataset.copy]||''); cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy',1000); return}
   const pv=e.target.closest('[data-prev]');
   if(pv){previewHtml=codes[+pv.dataset.prev]||''; $('#modal').classList.add('on'); $('#mf').srcdoc=previewHtml; $('#mName').value=''; return}
-  const b=e.target.closest('[data-go],[data-open],[data-del],#newChat,#burger,#scrim,#mX,#mSave,#mDl');
+  const b=e.target.closest('[data-go],[data-open],[data-del],#newChat,#burger,#scrim,#mX,#mDl');
   if(!b) return;
-  if(b.id==='newChat'){S.cur=null;sv();home();side();$('#app').classList.remove('open')}
+  if(b.id==='newChat'){S.cur=null;sv();home();side();closeSide()}
   if(b.id==='burger') $('#app').classList.add('open');
-  if(b.id==='scrim') $('#app').classList.remove('open');
+  if(b.id==='scrim') closeSide();
   if(b.id==='mX'){$('#modal').classList.remove('on');$('#mf').srcdoc=''}
   if(b.id==='mDl'&&previewHtml){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([previewHtml],{type:'text/html'}));a.download=($('#mName').value||'project')+'.html';a.click()}
-  if(b.dataset.go==='home'){S.cur=null;home();side();$('#app').classList.remove('open')}
-  if(b.dataset.go==='chats'){chatsView();$('#app').classList.remove('open')}
-  if(b.dataset.go==='settings'){settingsView();$('#app').classList.remove('open')}
-  if(b.dataset.open){S.cur=b.dataset.open;sv();chatView({force:1});side();$('#app').classList.remove('open')}
+  if(b.dataset.go==='home'){S.cur=null;home();side();closeSide()}
+  if(b.dataset.go==='chats'){chatsView();closeSide()}
+  if(b.dataset.go==='settings'){settingsView();closeSide()}
+  if(b.dataset.go==='admin'){adminView();closeSide()}
+  if(b.dataset.open){S.cur=b.dataset.open;sv();buildChatShell(cur());renderMsgs(true);side();closeSide()}
   if(b.dataset.del){S.chats=S.chats.filter(c=>c.id!==b.dataset.del); if(S.cur===b.dataset.del)S.cur=null;sv();chatsView();side()}
 });
-document.addEventListener('touchmove',function(e){
-  const sc=e.target.closest('.msgs,.recent,.pg,.home,.cb pre');
-  if(!sc) e.preventDefault();
-},{passive:false});
 home(); side();
 })();
 </script>
