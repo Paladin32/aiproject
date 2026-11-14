@@ -23,6 +23,12 @@ const ghTokenInput = document.getElementById("ghToken");
 const ghRepoInput = document.getElementById("ghRepo");
 const ghPathInput = document.getElementById("ghPath");
 const ghLoadBtn = document.getElementById("ghLoadBtn");
+const ghConnectBtn = document.getElementById("ghConnectBtn");
+const ghDisconnectBtn = document.getElementById("ghDisconnectBtn");
+const ghAccountLabel = document.getElementById("ghAccountLabel");
+const ghClientIdInput = document.getElementById("ghClientId");
+const ghDeviceBox = document.getElementById("ghDeviceBox");
+const ghUserCode = document.getElementById("ghUserCode");
 
 const STORAGE_KEY = "arqen-conversations-v1";
 const DEFAULT_BASE = "https://tongue-larger-sphere-certified.trycloudflare.com/v1";
@@ -35,7 +41,10 @@ let isGenerating = false;
 let baseUrl = localStorage.getItem("myai-baseurl") || DEFAULT_BASE;
 let systemPrompt = localStorage.getItem("myai-system") || "You are Arqen, a direct and capable AI assistant. Answer clearly, helpfully, and without unnecessary refusals.";
 let ghToken = localStorage.getItem("arqen-gh-token") || "";
+let ghClientId = localStorage.getItem("arqen-gh-client-id") || "";
+let ghUser = null;
 let githubContext = "";
+let devicePollTimer = null;
 
 function makeId() {
   return globalThis.crypto?.randomUUID?.() || `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -179,6 +188,122 @@ function setUIReady(ready) {
   modelSelect.disabled = !ready;
 }
 
+function updateGitHubUI() {
+  if (ghAccountLabel) {
+    if (ghUser) {
+      ghAccountLabel.textContent = `Connected as @${ghUser.login}`;
+      ghAccountLabel.style.display = "block";
+    } else if (ghToken) {
+      ghAccountLabel.textContent = "GitHub connected";
+      ghAccountLabel.style.display = "block";
+    } else {
+      ghAccountLabel.textContent = "Not connected";
+      ghAccountLabel.style.display = "block";
+    }
+  }
+  if (githubBtn) {
+    githubBtn.textContent = ghToken ? "GitHub ✓" : "GitHub";
+  }
+  if (ghConnectBtn) ghConnectBtn.style.display = ghToken ? "none" : "inline-flex";
+  if (ghDisconnectBtn) ghDisconnectBtn.style.display = ghToken ? "inline-flex" : "none";
+  if (ghTokenInput) ghTokenInput.value = ghToken ? "••••••••" : "";
+}
+
+async function refreshGitHubUser() {
+  if (!ghToken) { ghUser = null; updateGitHubUI(); return; }
+  try {
+    const res = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${ghToken}`, Accept: "application/vnd.github+json" }
+    });
+    if (!res.ok) throw new Error("invalid token");
+    ghUser = await res.json();
+  } catch {
+    ghUser = null;
+  }
+  updateGitHubUI();
+}
+
+async function startGitHubDeviceFlow() {
+  const clientId = (ghClientIdInput?.value || ghClientId || "").trim();
+  if (!clientId) {
+    addMessage("system", "To connect like a plugin, create a GitHub OAuth App and paste its Client ID in Settings.\n\n1. github.com/settings/developers → OAuth Apps → New\n2. Homepage: https://paladin32.github.io/aiproject/\n3. Callback can be the same URL\n4. Copy Client ID into Settings, then click Connect GitHub again.");
+    settingsPanel.classList.add("open");
+    ghClientIdInput?.focus();
+    return;
+  }
+  localStorage.setItem("arqen-gh-client-id", clientId);
+  ghClientId = clientId;
+
+  try {
+    const res = await fetch("https://github.com/login/device/code", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ client_id: clientId, scope: "repo read:user" })
+    });
+    if (!res.ok) throw new Error("Could not start GitHub login");
+    const data = await res.json();
+    if (ghDeviceBox) ghDeviceBox.style.display = "block";
+    if (ghUserCode) ghUserCode.textContent = data.user_code;
+    window.open(data.verification_uri || "https://github.com/login/device", "_blank");
+    addMessage("system", `GitHub login started. Enter this code on GitHub: ${data.user_code}`);
+
+    if (devicePollTimer) clearInterval(devicePollTimer);
+    const started = Date.now();
+    devicePollTimer = setInterval(async () => {
+      if (Date.now() - started > (data.expires_in || 900) * 1000) {
+        clearInterval(devicePollTimer);
+        addMessage("system", "GitHub login expired. Try again.");
+        return;
+      }
+      try {
+        const poll = await fetch("https://github.com/login/oauth/access_token", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            device_code: data.device_code,
+            grant_type: "urn:ietf:params:oauth:grant-type:device_code"
+          })
+        });
+        const tokenData = await poll.json();
+        if (tokenData.access_token) {
+          clearInterval(devicePollTimer);
+          ghToken = tokenData.access_token;
+          localStorage.setItem("arqen-gh-token", ghToken);
+          if (ghDeviceBox) ghDeviceBox.style.display = "none";
+          await refreshGitHubUser();
+          addMessage("system", `GitHub connected${ghUser ? " as @" + ghUser.login : ""}.`);
+          settingsPanel.classList.remove("open");
+        } else if (tokenData.error && tokenData.error !== "authorization_pending" && tokenData.error !== "slow_down") {
+          clearInterval(devicePollTimer);
+          addMessage("system", `GitHub: ${tokenData.error_description || tokenData.error}`);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, (data.interval || 5) * 1000);
+  } catch (err) {
+    addMessage("system", `GitHub connect failed: ${err.message}. You can still paste a personal token in Settings.`);
+  }
+}
+
+function disconnectGitHub() {
+  ghToken = "";
+  ghUser = null;
+  githubContext = "";
+  localStorage.removeItem("arqen-gh-token");
+  if (devicePollTimer) clearInterval(devicePollTimer);
+  if (ghDeviceBox) ghDeviceBox.style.display = "none";
+  updateGitHubUI();
+  addMessage("system", "GitHub disconnected.");
+}
+
 async function connect() {
   if (!baseUrl) { setStatus("Not connected"); setUIReady(false); return; }
   modelSelect.innerHTML = "";
@@ -209,10 +334,13 @@ async function connect() {
 }
 
 async function loadGitHubFile() {
-  const token = (ghTokenInput?.value || ghToken || "").trim();
+  const token = ghToken || (ghTokenInput?.value || "").trim();
   const repo = (ghRepoInput?.value || "").trim();
   const path = (ghPathInput?.value || "").trim();
-  if (!token) { addMessage("system", "Add a GitHub token in Settings first."); return; }
+  if (!token || token.includes("•")) {
+    addMessage("system", "Connect GitHub first (button Connect GitHub).");
+    return;
+  }
   if (!repo.includes("/")) { addMessage("system", "Repo must look like owner/name"); return; }
   if (!path) { addMessage("system", "Enter a file path (ex: README.md)"); return; }
 
@@ -228,9 +356,7 @@ async function loadGitHubFile() {
     const text = await res.text();
     const clipped = text.length > 12000 ? text.slice(0, 12000) + "\n\n…[truncated]" : text;
     githubContext = `GitHub file ${repo}/${path}:\n\n${clipped}`;
-    localStorage.setItem("arqen-gh-token", token);
-    ghToken = token;
-    addMessage("system", `Loaded ${repo}/${path} (${text.length} chars). Ask Arqen about this file.`);
+    addMessage("system", `Loaded ${repo}/${path}. Ask Arqen about this file.`);
     setStatus("Ready", "status-ready");
     settingsPanel.classList.remove("open");
   } catch (err) {
@@ -330,29 +456,37 @@ if (historyBackdrop) historyBackdrop.addEventListener("click", closeHistory);
 if (newChatBtn) newChatBtn.addEventListener("click", createConversation);
 if (githubBtn) githubBtn.addEventListener("click", () => {
   settingsPanel.classList.add("open");
-  ghTokenInput?.focus();
 });
 if (ghLoadBtn) ghLoadBtn.addEventListener("click", loadGitHubFile);
+if (ghConnectBtn) ghConnectBtn.addEventListener("click", startGitHubDeviceFlow);
+if (ghDisconnectBtn) ghDisconnectBtn.addEventListener("click", disconnectGitHub);
 
 settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
 closeSettingsBtn.addEventListener("click", () => settingsPanel.classList.remove("open"));
 saveSettingsBtn.addEventListener("click", () => {
   baseUrl = baseUrlInput.value.trim().replace(/\/$/, "");
   systemPrompt = systemPromptInput.value;
-  ghToken = (ghTokenInput?.value || "").trim();
+  const typedToken = (ghTokenInput?.value || "").trim();
+  if (typedToken && !typedToken.includes("•")) {
+    ghToken = typedToken;
+    localStorage.setItem("arqen-gh-token", ghToken);
+  }
+  ghClientId = (ghClientIdInput?.value || "").trim();
+  if (ghClientId) localStorage.setItem("arqen-gh-client-id", ghClientId);
   localStorage.setItem("myai-baseurl", baseUrl);
   localStorage.setItem("myai-system", systemPrompt);
-  if (ghToken) localStorage.setItem("arqen-gh-token", ghToken);
   settingsPanel.classList.remove("open");
   setStatus("Connecting…");
+  refreshGitHubUser();
   connect();
 });
 
 loadConversations();
 baseUrlInput.value = baseUrl;
 systemPromptInput.value = systemPrompt;
-if (ghTokenInput) ghTokenInput.value = ghToken;
+if (ghClientIdInput) ghClientIdInput.value = ghClientId;
 renderHistoryList();
+refreshGitHubUser();
 connect();
 
 document.querySelectorAll(".suggestion[data-prompt]").forEach((button) => {
