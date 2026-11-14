@@ -5,23 +5,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#020205">
 <title>Arqen Era</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#020205;--ink:#f4f4f8;--mute:#80829a;--line:rgba(255,255,255,.08);--glass:rgba(4,4,8,.75);--h:rgba(255,255,255,.07)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:"Instrument Sans",system-ui,sans-serif;background:radial-gradient(80% 60% at 30% 100%,#ff5e7e22,transparent),radial-gradient(70% 60% at 90% 90%,#2b59ff33,transparent),var(--bg);color:var(--ink);overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.app{display:grid;grid-template-columns:256px 1fr;height:100dvh}
+.side{display:flex;flex-direction:column;gap:16px;padding:18px 14px;background:var(--glass);backdrop-filter:blur(24px);border-right:1px solid var(--line);min-height:0}
+.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;letter-spacing:-.03em;padding-left:6px}
+.brand i{width:11px;height:11px;border-radius:50%;background:conic-gradient(#ffb347,#ff5e7e,#4d7bff,#ffb347);box-shadow:0 0 16px #ff5e7e99}
+.new{height:40px;padding:0 14px;border-radius:11px;background:#fff;color:#0a0b12;font-weight:600;width:100%;display:flex;align-items:center;justify-content:space-between}
+.nav button,.recent button{display:block;width:100%;padding:8px 10px;border-radius:8px;color:var(--mute);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav button:hover,.recent button:hover,.nav button.on,.recent button.on{background:var(--h);color:var(--ink)}
+.recent{flex:1;overflow:auto;min-height:0}.grp{font-size:12px;color:var(--mute);padding:6px 10px;opacity:.75}
+.main{display:flex;flex-direction:column;min-width:0;height:100%}
+.top{height:54px;display:flex;align-items:center;padding:0 16px;font-weight:600;gap:8px}
+#view{flex:1;overflow:auto;min-height:0}
+.home{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font-size:clamp(40px,10vw,96px);font-weight:600;letter-spacing:-.05em;line-height:.95;text-align:center}
+h1 .dim{color:rgba(255,255,255,.45)}
+.box{width:min(720px,100%);border-radius:20px;background:var(--glass);backdrop-filter:blur(20px);padding:14px;box-shadow:inset 0 0 0 1px var(--line)}
+textarea{width:100%;border:0;background:none;resize:none;color:var(--ink);font:inherit;font-size:16px;line-height:1.5;outline:0;min-height:52px;max-height:180px}
+textarea::placeholder{color:#80829a}
+.row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.chip{height:34px;padding:0 12px;border-radius:10px;color:var(--mute);font-weight:600;font-size:13px;background:transparent}
+.chip:hover{background:var(--h);color:var(--ink)}
+.send{width:38px;height:38px;border-radius:50%;background:#fff;color:#0a0b12;display:grid;place-items:center;margin-left:auto;opacity:.35}
+.send.ready{opacity:1}
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{flex:1;overflow:auto;padding:8px 18px 16px}
+.mi{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.u{align-self:flex-end;max-width:85%;background:rgba(255,255,255,.09);padding:10px 14px;border-radius:16px 16px 4px 16px;white-space:pre-wrap;line-height:1.5}
+.a{line-height:1.65;color:#dcdce6;white-space:pre-wrap}
+.think{color:var(--mute)}
+.cin{padding:0 18px 16px;display:flex;justify-content:center}
+.pg{max-width:820px;margin:0 auto;padding:12px 18px 40px}
+.pg h2{font-size:26px;font-weight:600;margin-bottom:14px}
+.in{width:100%;height:42px;padding:0 12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
+.sc{padding:16px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
+.sc h3{font-size:14px;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.08);font-weight:600}
+.btn.p{background:#fff;color:#0a0b12}
+.fine{margin-top:12px;text-align:center;color:var(--mute);font-size:12px}
+.scrim{display:none}
+@media(max-width:860px){
+.app{grid-template-columns:1fr}
+.side{position:fixed;inset:0 auto 0 0;width:270px;z-index:20;transform:translateX(-105%);transition:.25s;background:rgba(3,3,6,.98)}
+.app.open .side{transform:none}
+.app.open .scrim{display:block;position:fixed;inset:0;z-index:10;background:#0008}
+.burger{display:grid;width:36px;height:36px;place-items:center;border-radius:9px;color:var(--mute)}
+}
+@media(min-width:861px){.burger{display:none}}
+</style>
 </head>
-<body style="margin:0;background:#020205;color:#80829a;font-family:system-ui;display:grid;place-items:center;height:100dvh">
-<div>Loading Arqen Era…</div>
+<body>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="brand"><i></i>Arqen Era</div>
+    <button class="new" id="newChat">New chat</button>
+    <nav class="nav">
+      <button data-go="home" class="on">Home</button>
+      <button data-go="chats">Chats</button>
+      <button data-go="settings">Settings</button>
+    </nav>
+    <div class="recent" id="rec"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="main">
+    <header class="top">
+      <button class="burger" id="burger" aria-label="Menu">☰</button>
+      <span id="ttl">New chat</span>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
 <script>
-(async function () {
-  try {
-    const parts = await Promise.all([0,1,2].map(i => fetch('part' + i + '.txt?v=2').then(r => {
-      if (!r.ok) throw new Error('part' + i + ' ' + r.status);
-      return r.text();
-    })));
-    const html = parts.join('');
-    document.open();
-    document.write(html);
-    document.close();
-  } catch (e) {
-    document.body.textContent = 'Failed to load: ' + e.message;
+(function(){
+const $=s=>document.querySelector(s);
+const API_BASE=(localStorage.getItem('arqen-api-base')||'https://tongue-larger-sphere-certified.trycloudflare.com/v1').replace(/\/$/,'');
+const API_KEY=localStorage.getItem('arqen-api-key')||'ollama';
+const API_MODEL=localStorage.getItem('arqen-api-model')||'arqen';
+function ld(){try{const d=JSON.parse(localStorage.getItem('arqen-era-v1'));if(d&&d.chats)return d}catch(e){}return{chats:[],cur:null,style:''}}
+let S=ld();
+const sv=()=>{try{localStorage.setItem('arqen-era-v1',JSON.stringify(S))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&','<':'<','>':'>','"':'"'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let busy=false,ctl=null;
+
+function cur(){return S.chats.find(c=>c.id===S.cur)}
+function SYS(){return 'You are Arqen Era 1.1, a capable AI assistant. Be clear, direct and useful. '+(S.style||'')}
+
+function side(){
+  const a=S.chats.slice(0,8);
+  $('#rec').innerHTML=a.length?'<div class="grp">Recent</div>'+a.map(c=>`<button data-open="${c.id}">${esc(c.title)}</button>`).join(''):'';
+}
+
+function home(){
+  $('#ttl').textContent='New chat';
+  $('#view').innerHTML=`<div class="home"><h1>Describe it.<br><span class="dim">Watch it ship.</span></h1>
+  <div class="box"><textarea id="p" rows="2" placeholder="Ask Arqen Era anything…"></textarea>
+  <div class="row"><button class="chip" type="button">Arqen Era 1.1</button><button class="send" id="send" aria-label="Send">↑</button></div></div>
+  <p class="fine">Private model · Your VPS</p></div>`;
+  wire();
+}
+function chatView(){
+  const c=cur(); if(!c){home();return}
+  $('#ttl').textContent=c.title;
+  const msgs=c.msgs.map(m=>m.role==='user'?`<div class="u">${esc(m.content)}</div>`:`<div class="a">${m.content?esc(m.content):'<span class="think">Thinking…</span>'}</div>`).join('');
+  $('#view').innerHTML=`<div class="chat"><div class="msgs" id="ms"><div class="mi">${msgs}</div></div>
+  <div class="cin"><div class="box"><textarea id="p" rows="2" placeholder="Reply…"></textarea>
+  <div class="row"><button class="chip" type="button">Arqen Era 1.1</button><button class="send" id="send">↑</button></div></div></div></div>`;
+  wire();
+  const ms=$('#ms'); if(ms) ms.scrollTop=ms.scrollHeight;
+}
+function chatsView(){
+  $('#ttl').textContent='Chats';
+  $('#view').innerHTML=`<div class="pg"><h2>Chats</h2>${S.chats.length?S.chats.map(c=>`<div style="display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:10px 0">
+    <button style="flex:1;font-weight:600" data-open="${c.id}">${esc(c.title)}</button>
+    <button class="btn" data-del="${c.id}">×</button></div>`).join(''):'<p style="color:var(--mute)">No chats yet.</p>'}</div>`;
+}
+function settingsView(){
+  $('#ttl').textContent='Settings';
+  $('#view').innerHTML=`<div class="pg"><h2>Settings</h2>
+  <div class="sc"><h3>Arqen API</h3>
+    <input class="in" id="apiBase" placeholder="API Base URL">
+    <input class="in" id="apiModel" placeholder="Model name">
+    <input class="in" id="apiKey" type="password" placeholder="API key">
+    <button class="btn p" id="apiSave">Save API</button>
+  </div>
+  <div class="sc"><h3>Instructions</h3>
+    <textarea id="style" style="width:100%;min-height:90px;background:rgba(255,255,255,.05);border:0;border-radius:11px;padding:12px;color:var(--ink);font:inherit;box-shadow:inset 0 0 0 1px var(--line)" placeholder="Custom instructions…"></textarea>
+  </div></div>`;
+  $('#apiBase').value=API_BASE; $('#apiModel').value=API_MODEL; $('#apiKey').value=API_KEY; $('#style').value=S.style||'';
+  $('#apiSave').onclick=()=>{
+    localStorage.setItem('arqen-api-base',$('#apiBase').value.trim().replace(/\/$/,''));
+    localStorage.setItem('arqen-api-model',$('#apiModel').value.trim()||'arqen');
+    localStorage.setItem('arqen-api-key',$('#apiKey').value.trim()||'ollama');
+    S.style=$('#style').value; sv();
+    location.reload();
+  };
+  $('#style').oninput=()=>{S.style=$('#style').value;sv()};
+}
+
+function wire(){
+  const p=$('#p'), s=$('#send'); if(!p) return;
+  const sync=()=>{p.style.height='auto';p.style.height=Math.min(p.scrollHeight,180)+'px';s.classList.toggle('ready',!!p.value.trim()||busy)};
+  p.oninput=sync; sync();
+  const go=()=>{const v=p.value.trim(); if(!v||busy)return; p.value='';sync(); ask(v)};
+  p.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();go()}};
+  s.onclick=()=>{if(busy&&ctl)ctl.abort(); else go()};
+}
+
+async function ask(t){
+  let c=cur();
+  if(!c){c={id:uid(),title:t.slice(0,48),msgs:[],t:Date.now()};S.chats.unshift(c);S.cur=c.id}
+  c.msgs.push({role:'user',content:t}); c.t=Date.now(); sv();
+  const m={role:'assistant',content:''}; c.msgs.push(m);
+  busy=true; ctl=new AbortController(); chatView(); side();
+  const messages=[{role:'system',content:SYS()},...c.msgs.slice(0,-1).map(x=>({role:x.role,content:x.content}))];
+  try{
+    const res=await fetch(API_BASE+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
+      body:JSON.stringify({model:API_MODEL,messages,stream:true}),
+      signal:ctl.signal
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop()||'';
+      for(const line of lines){
+        const t=line.trim(); if(!t.startsWith('data:')) continue;
+        const payload=t.slice(5).trim(); if(payload==='[DONE]') continue;
+        try{const j=JSON.parse(payload); const d=j.choices?.[0]?.delta?.content||''; if(d){m.content+=d; chatView()}}catch(e){}
+      }
+    }
+  }catch(e){
+    if(e.name!=='AbortError') m.content=m.content||('Error: '+e.message);
   }
+  busy=false; sv(); chatView(); side();
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-go],[data-open],[data-del],#newChat,#burger,#scrim');
+  if(!b) return;
+  if(b.id==='newChat'){S.cur=null;sv();home();side();$('#app').classList.remove('open')}
+  if(b.id==='burger') $('#app').classList.add('open');
+  if(b.id==='scrim') $('#app').classList.remove('open');
+  if(b.dataset.go==='home'){S.cur=null;home();side();$('#app').classList.remove('open')}
+  if(b.dataset.go==='chats'){chatsView();$('#app').classList.remove('open')}
+  if(b.dataset.go==='settings'){settingsView();$('#app').classList.remove('open')}
+  if(b.dataset.open){S.cur=b.dataset.open;sv();chatView();side();$('#app').classList.remove('open')}
+  if(b.dataset.del){S.chats=S.chats.filter(c=>c.id!==b.dataset.del); if(S.cur===b.dataset.del)S.cur=null;sv();chatsView();side()}
+});
+
+home(); side();
 })();
 </script>
 </body>
