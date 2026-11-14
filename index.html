@@ -104,7 +104,6 @@ const sv=()=>{try{localStorage.setItem('arqen-era-v2',JSON.stringify(S))}catch(e
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&','<':'<','>':'>','"':'"'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let busy=false,ctl=null,codes=[],previewHtml='';
-
 function cur(){return S.chats.find(c=>c.id===S.cur)}
 function SYS(){
   if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive. '+(S.style||'');
@@ -183,28 +182,41 @@ async function ask(t){
   const m={role:'assistant',content:''}; c.msgs.push(m);
   busy=true; ctl=new AbortController(); chatView(); side();
   const messages=[{role:'system',content:SYS()},...c.msgs.slice(0,-1).map(x=>({role:x.role,content:x.content}))];
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+API_KEY};
   try{
-    const res=await fetch(API_BASE+'/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
-      body:JSON.stringify({model:API_MODEL,messages,stream:true}),
-      signal:ctl.signal
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
-    while(true){
-      const {done,value}=await reader.read();
-      if(done) break;
-      buf+=dec.decode(value,{stream:true});
-      const lines=buf.split('\n'); buf=lines.pop()||'';
-      for(const line of lines){
-        const t=line.trim(); if(!t.startsWith('data:')) continue;
-        const payload=t.slice(5).trim(); if(payload==='[DONE]') continue;
-        try{const j=JSON.parse(payload); const d=j.choices?.[0]?.delta?.content||''; if(d){m.content+=d; chatView()}}catch(e){}
+    try{
+      const res=await fetch(API_BASE+'/chat/completions',{
+        method:'POST', headers, body:JSON.stringify({model:API_MODEL,messages,stream:true}), signal:ctl.signal
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      if(!res.body||!res.body.getReader) throw new Error('no-stream');
+      const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
+      while(true){
+        const {done,value}=await reader.read();
+        if(done) break;
+        buf+=dec.decode(value,{stream:true});
+        const lines=buf.split('\n'); buf=lines.pop()||'';
+        for(const line of lines){
+          const row=line.trim(); if(!row.startsWith('data:')) continue;
+          const payload=row.slice(5).trim(); if(payload==='[DONE]') continue;
+          try{const j=JSON.parse(payload); const d=j.choices?.[0]?.delta?.content||''; if(d){m.content+=d; chatView()}}catch(e){}
+        }
       }
+    }catch(streamErr){
+      if(streamErr.name==='AbortError') throw streamErr;
+      const res=await fetch(API_BASE+'/chat/completions',{
+        method:'POST', headers, body:JSON.stringify({model:API_MODEL,messages,stream:false}), signal:ctl.signal
+      });
+      if(!res.ok){const body=await res.text().catch(()=>''); throw new Error('HTTP '+res.status+(body?': '+body.slice(0,120):''));}
+      const j=await res.json();
+      m.content=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||'';
     }
+    m.content=(m.content||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
   }catch(e){
-    if(e.name!=='AbortError') m.content=m.content||('Error: '+e.message);
+    if(e.name!=='AbortError'){
+      const msg=e&&e.message?e.message:'Network error';
+      m.content='Could not reach the model.\n\n'+msg+'\n\nCheck: tunnel online? Settings → API URL correct?';
+    }
   }
   busy=false; sv(); chatView(); side();
 }
@@ -222,7 +234,6 @@ document.addEventListener('click',e=>{
   if(b.id==='scrim') $('#app').classList.remove('open');
   if(b.id==='mX'){$('#modal').classList.remove('on');$('#mf').srcdoc=''}
   if(b.id==='mDl'&&previewHtml){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([previewHtml],{type:'text/html'}));a.download=($('#mName').value||'project')+'.html';a.click()}
-  if(b.id==='mSave'){}
   if(b.dataset.go==='home'){S.cur=null;home();side();$('#app').classList.remove('open')}
   if(b.dataset.go==='chats'){chatsView();$('#app').classList.remove('open')}
   if(b.dataset.go==='settings'){settingsView();$('#app').classList.remove('open')}
