@@ -29,9 +29,9 @@
     .header-right{display:flex;align-items:center;gap:16px}
     #status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
     #status:before{content:"";width:7px;height:7px;border-radius:50%;background:#b9bdb5}
-    #status.status-ready:before{background:#555555}
-    #status.status-error:before{background:#c36a60}
-    .status-ready{color:#555555!important}.status-error{color:var(--danger)!important}
+    #status.status-ready:before{background:#22c55e}
+    #status.status-error:before{background:#ef4444}
+    .status-ready{color:#16a34a!important}.status-error{color:#dc2626!important}
     .toolbar{height:62px;flex:none;display:flex;align-items:center;gap:9px}
     .toolbar-spacer{flex:1}
     select,.btn{height:36px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:0 12px;font-size:11px;outline:none;transition:.16s}
@@ -57,7 +57,6 @@
     .suggestion{border:1px solid var(--line);background:#fafafa;border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;transition:.16s;color:var(--ink)}
     .suggestion:hover{background:white;border-color:#d0d0d0;transform:translateY(-2px);box-shadow:0 8px 22px #0000000a}
     .suggestion strong{display:block;font-size:11px;font-weight:650;margin-bottom:5px}.suggestion span{display:block;font-size:10px;color:var(--muted);line-height:1.45}
-    .suggestion-icon{display:none}
     .msg{position:relative;max-width:88%;padding:13px 16px;border-radius:15px;font-size:14px;line-height:1.72;white-space:pre-wrap;overflow-wrap:anywhere;animation:appear .16s ease}
     .user{align-self:flex-end;max-width:min(78%,620px);background:#f1f1f1;color:#222222;border:1px solid #e7e7e7;border-bottom-right-radius:5px}
     .assistant{align-self:flex-start;width:100%;max-width:100%;padding:2px 48px 2px 0;background:transparent;border:0;border-radius:0;color:#343a33}
@@ -85,17 +84,13 @@
     @keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:700px){
       .app-shell{padding:0 17px}header{height:66px}.brand-mark{width:33px;height:33px}.header-right{gap:7px}#status{font-size:10px}
-      .toolbar{height:58px;gap:6px}.toolbar .btn{padding:0 9px;font-size:10px}select{min-width:0;max-width:none}
+      .toolbar{height:58px;gap:6px;flex-wrap:wrap}.toolbar .btn{padding:0 9px;font-size:10px}select{min-width:0;max-width:none;flex:1}
       #settingsPanel{padding:14px}.settings-fields{grid-template-columns:1fr}.settings-heading span{display:none}
       #chat{padding:16px 0 22px;gap:18px}.empty-state{padding:25px 4px 35px}.empty-state h2{font-size:32px}
       .suggestions{gap:7px;margin-top:24px}.suggestion{padding:11px}.suggestion strong{font-size:10px}.suggestion span{font-size:9px}
       .msg{font-size:13px}.user{max-width:88%}.assistant{padding-right:0}.msg-actions{position:static;display:inline-block;margin-top:7px;opacity:1}
       footer{padding-top:6px}#send{min-width:68px}.composer-hint{font-size:8px}
     }
-    @media(max-width:390px){.brand span{font-size:9px}.toolbar{gap:5px}.toolbar .btn{padding:0 7px}select{font-size:10px}.suggestions{grid-template-columns:1fr}}
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-
-    /* ChatGPT-style workspace layout */
     @media(min-width:701px){
       .app-shell{max-width:none;margin-left:260px;padding:0 34px}
       .history-drawer{transform:none;top:0;bottom:0;width:260px;padding:22px 14px 18px;background:#f7f7f7;border-right:1px solid #e5e5e5;box-shadow:none;gap:16px}
@@ -136,44 +131,8 @@
       .sidebar-brand .brand-mark{height:32px;width:32px;border-radius:10px}
       .sidebar-brand .brand-copy h1{font-size:14px}
       .sidebar-brand .brand-copy span{font-size:9px}
-      .history-top{padding-top:2px}
     }
-
-
-    /* Strict monochrome palette: prevent inherited tinted colors. */
-    :root{
-      color-scheme:light;
-      --bg:#ffffff!important;--surface:#ffffff!important;--surface-2:#f4f4f4!important;
-      --line:#e5e5e5!important;--ink:#111111!important;--muted:#737373!important;
-      --muted-2:#a3a3a3!important;--accent:#111111!important;--accent-dark:#000000!important;
-      --accent-pale:#f0f0f0!important;--danger:#555555!important;
-    }
-    html,body,.app-shell,#chat,footer,.composer,#settingsPanel,.history-drawer{
-      background-color:#ffffff!important;color:#111111!important;
-    }
-    .history-drawer{background-color:#f5f5f5!important}
-    .brand-mark,.btn-primary,#send{background:#111111!important;color:#ffffff!important;border-color:#111111!important}
-    .btn-primary:hover,#send:hover{background:#000000!important}
-    .user,.suggestion,.system,.field input,.field textarea,.copy-btn{
-      background:#f3f3f3!important;color:#171717!important;border-color:#e5e5e5!important;
-    }
-    .assistant,.msg,.brand h1,.empty-state h2,.suggestion strong,.field label,
-    .settings-heading strong,.history-open,.history-top strong{color:#171717!important}
-    .muted,.brand span,.empty-state p,.suggestion span,.composer-hint,.footer-meta,
-    #status,.settings-heading span,.history-empty,.field label{color:#737373!important}
-    .btn,select,.history-open,.history-action{border-color:#e5e5e5!important}
-    .btn:hover,.history-open:hover,.history-open.active,.history-action:hover{background:#eeeeee!important;color:#111111!important}
-    #status:before,#status.status-ready:before,#status.status-error:before{background:#777777!important}
-    .status-ready,.status-error{color:#555555!important}
-    a{color:#111111}
-    @media(prefers-color-scheme:dark){
-      :root{color-scheme:light!important}
-      html,body{background:#ffffff!important;color:#111111!important}
-    }
-  
-    /* Final safeguard: the entire interface must remain strictly monochrome. */
-    html { filter: grayscale(1) !important; }
-    * { accent-color: #000 !important; }
+    @keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
@@ -181,13 +140,12 @@
     <header>
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">A</div>
-        <div class="brand-copy"><h1>Arqen</h1><span>ERA 1.1&nbsp; · &nbsp;PERSONAL INTELLIGENCE</span></div>
+        <div class="brand-copy"><h1>Arqen</h1><span>Personal AI</span></div>
       </div>
-      <div class="header-right"><button class="btn" id="googleAuthBtn" type="button">Continue with Google</button><div id="accountLabel" style="display:none;font-size:11px;color:#737373"></div><div id="status" role="status" aria-live="polite">Not connected</div></div>
+      <div class="header-right"><div id="status" role="status" aria-live="polite">Connecting…</div></div>
     </header>
     <div class="toolbar">
-      <select id="modelSelect" aria-label="Choose a model" disabled><option value="">No model</option></select>
-      <a class="btn" href="docs.html" style="display:inline-flex;align-items:center;text-decoration:none">Documentation</a>
+      <select id="modelSelect" aria-label="Choose a model" disabled><option value="arqen">arqen</option></select>
       <button class="btn" id="historyBtn" type="button">History</button>
       <div class="toolbar-spacer"></div>
       <button class="btn" id="settingsBtn" type="button">Settings</button>
@@ -195,24 +153,25 @@
     </div>
     <div class="history-backdrop" id="historyBackdrop"></div>
     <aside class="history-drawer" id="historyDrawer" aria-label="Conversation history" aria-hidden="true">
-      <div class="sidebar-brand"><div class="brand-mark" aria-hidden="true">A</div><div class="brand-copy"><h1>Arqen</h1><span>PERSONAL AI</span></div></div><div class="history-top"><strong>Recent</strong><button class="btn" id="closeHistory" type="button">Close</button></div>
+      <div class="sidebar-brand"><div class="brand-mark" aria-hidden="true">A</div><div class="brand-copy"><h1>Arqen</h1><span>PERSONAL AI</span></div></div>
+      <div class="history-top"><strong>Recent</strong><button class="btn" id="closeHistory" type="button">Close</button></div>
       <button class="btn btn-primary" id="newChatBtn" type="button">＋ New conversation</button>
       <div id="historyList"><div class="history-empty">Your saved conversations will appear here.</div></div>
     </aside>
     <section id="settingsPanel" aria-label="Settings">
       <div class="settings-heading"><strong>Workspace settings</strong><span>Configure your AI connection</span></div>
       <div class="settings-fields">
-        <div class="field"><label for="baseUrl">Ollama server URL</label><input type="text" id="baseUrl" placeholder="https://your-server.com" autocomplete="url" /></div>
+        <div class="field"><label for="baseUrl">API Base URL</label><input type="text" id="baseUrl" placeholder="https://tongue-larger-sphere-certified.trycloudflare.com/v1" autocomplete="url" /></div>
         <div class="field"><label for="systemPrompt">System instructions</label><textarea id="systemPrompt" placeholder="Describe how your assistant should behave..."></textarea></div>
       </div>
-      <div class="settings-actions"><button class="btn" id="closeSettings" type="button">Close</button><button class="btn btn-primary" id="saveSettings" type="button">Save &amp; connect</button></div>
+      <div class="settings-actions"><button class="btn" id="closeSettings" type="button">Close</button><button class="btn btn-primary" id="saveSettings" type="button">Save & connect</button></div>
     </section>
     <main id="chat" aria-live="polite" aria-label="Conversation">
       <div class="empty-state" id="emptyState">
         <div class="welcome-mark" aria-hidden="true">A</div>
-        <div class="welcome-eyebrow">A clearer way to think</div>
-        <h2>Good ideas start with a question.</h2>
-        <p>Explore a thought, solve a problem, or turn an idea into something real. Arqen is ready to help.</p>
+        <div class="welcome-eyebrow">Arqen</div>
+        <h2>What do you want to work on?</h2>
+        <p>Explore a thought, solve a problem, or turn an idea into something real.</p>
         <div class="suggestions">
           <button class="suggestion" type="button" data-prompt="Help me understand a difficult topic step by step."><strong>Learn something</strong><span>Break down a complex topic simply</span></button>
           <button class="suggestion" type="button" data-prompt="Help me brainstorm original ideas for a project."><strong>Explore ideas</strong><span>Brainstorm something from scratch</span></button>
@@ -224,9 +183,9 @@
     <footer>
       <div class="composer">
         <div class="input-row"><textarea id="input" placeholder="Ask Arqen anything..." rows="1" aria-label="Write a message" disabled></textarea><button id="send" type="button" disabled>Send</button></div>
-        <div class="composer-hint"><span>↵ Send&nbsp; · &nbsp;Shift + ↵ New line</span><span>Your personal AI workspace</span></div>
+        <div class="composer-hint"><span>↵ Send · Shift + ↵ New line</span><span id="connectionInfo">Arqen</span></div>
       </div>
-      <div class="footer-meta"><span id="connectionInfo">Not connected</span><span>AI can make mistakes. Verify important information.</span></div>
+      <div class="footer-meta"><span>Private · Your model</span><span>Made by Paul</span></div>
     </footer>
   </div>
   <script type="module" src="app.js"></script>
