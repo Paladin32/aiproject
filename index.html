@@ -53,8 +53,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-a
 h1{font-size:clamp(34px,9vw,80px);font-weight:600;letter-spacing:-.05em;line-height:.95;text-align:center}
 h1 .dim{color:rgba(255,255,255,.42)}
 .box{width:min(700px,100%);border-radius:18px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px;box-shadow:inset 0 0 0 1px var(--line)}
-textarea{width:100%;border:0;background:none;resize:none;color:var(--ink);font:inherit;font-size:16px;line-height:1.45;outline:0;min-height:44px;max-height:140px}
-textarea::placeholder{color:#80829a}
+textarea,input{font:inherit;color:var(--ink);font-size:16px}
+textarea{width:100%;border:0;background:none;resize:none;outline:0;min-height:44px;max-height:140px;line-height:1.45}
+textarea::placeholder,input::placeholder{color:#80829a}
 .row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
 .chip{height:32px;padding:0 12px;border-radius:9px;color:var(--mute);font-weight:600;font-size:13px}
 .chip.on{background:var(--h);color:var(--ink)}
@@ -74,17 +75,27 @@ textarea::placeholder{color:#80829a}
 .cb pre{padding:12px;overflow:auto;max-height:min(36vh,280px);-webkit-overflow-scrolling:touch}
 .cb pre code{background:none;padding:0;color:#c9cadb;font-size:12.5px;line-height:1.5;white-space:pre}
 .cin{flex-shrink:0;padding:0 14px calc(10px + var(--safe-b));display:flex;justify-content:center}
-.pg{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + var(--safe-b));max-width:820px;width:100%;margin:0 auto}
-.pg h2{font-size:24px;font-weight:600;margin-bottom:14px}
-.in{width:100%;height:44px;padding:0 12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:10px;font-size:16px}
+.pg{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + var(--safe-b));max-width:860px;width:100%;margin:0 auto}
+.pg h2{font-size:24px;font-weight:600;margin-bottom:6px}
+.pg .sub{color:var(--mute);font-size:13px;margin-bottom:16px;line-height:1.45}
+.in{width:100%;height:44px;padding:0 12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:10px}
+.ta{width:100%;min-height:120px;padding:12px;border-radius:11px;border:0;background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);resize:vertical;line-height:1.45;margin-bottom:10px}
 .sc{padding:14px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
 .sc h3{font-size:13px;margin-bottom:8px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.08);font-weight:600}
 .btn.p{background:#fff;color:#0a0b12}
+.btn.d{color:#ff8a9a}
 .fine{color:var(--mute);font-size:12px;text-align:center}
 .scrim{display:none}
 .lock{max-width:360px;margin:40px auto;padding:20px}
 .lock p{color:var(--mute);margin-bottom:12px;line-height:1.5}
+.feed-item{padding:12px 0;border-bottom:1px solid var(--line)}
+.feed-item .t{font-weight:600;margin-bottom:4px}
+.feed-item .m{color:var(--mute);font-size:12px;margin-bottom:8px}
+.feed-item .x{color:var(--mute);font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.feed-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.toggle{display:flex;align-items:center;gap:8px;margin:10px 0;color:var(--mute);font-size:13px}
+.toggle input{width:18px;height:18px}
 #modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);padding:max(2vh,var(--safe-t)) max(2vw,var(--safe-r)) max(2vh,var(--safe-b)) max(2vw,var(--safe-l))}
 #modal.on{display:flex}
 .mp{flex:1;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:#0b0b10;box-shadow:inset 0 0 0 1px #2a2a31;min-height:0}
@@ -107,6 +118,7 @@ textarea::placeholder{color:#80829a}
     <nav class="nav">
       <button type="button" data-go="home" class="on">Home</button>
       <button type="button" data-go="chats">Chats</button>
+      <button type="button" data-go="feed">Data Feed</button>
       <button type="button" data-go="settings">Settings</button>
       <button type="button" data-go="admin">Admin</button>
     </nav>
@@ -127,10 +139,14 @@ textarea::placeholder{color:#80829a}
 const $=s=>document.querySelector(s);
 const DEFAULT_API='https://lightning-console-sierra-audience.trycloudflare.com/v1';
 const DEFAULT_ADMIN_PASS='arqen2026';
+const FEED_MAX_CHARS=12000;
 function cfg(){try{return JSON.parse(localStorage.getItem('arqen-cfg')||'{}')}catch(e){return {}}}
 function saveCfg(c){localStorage.setItem('arqen-cfg',JSON.stringify(c))}
-let C=Object.assign({apiBase:localStorage.getItem('arqen-api-base')||DEFAULT_API,apiKey:'ollama',model:'arqen',adminPass:DEFAULT_ADMIN_PASS,style:''},cfg());
+let C=Object.assign({apiBase:localStorage.getItem('arqen-api-base')||DEFAULT_API,apiKey:'ollama',model:'arqen',adminPass:DEFAULT_ADMIN_PASS,style:'',feedOn:true},cfg());
 C.apiBase=(C.apiBase||DEFAULT_API).replace(/\/$/,'');
+function ldFeed(){try{const d=JSON.parse(localStorage.getItem('arqen-feed')||'[]');return Array.isArray(d)?d:[]}catch(e){return []}}
+function svFeed(f){localStorage.setItem('arqen-feed',JSON.stringify(f))}
+let FEED=ldFeed();
 function ld(){try{const d=JSON.parse(localStorage.getItem('arqen-era-v2'));if(d&&d.chats)return d}catch(e){}return{chats:[],cur:null,use:'ask'}}
 let S=ld(); if(!S.use)S.use='ask';
 const sv=()=>{try{localStorage.setItem('arqen-era-v2',JSON.stringify(S))}catch(e){}};
@@ -139,11 +155,25 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let busy=false,ctl=null,codes=[],previewHtml='',adminOK=sessionStorage.getItem('arqen-admin')==='1';
 let streamTarget=null;
 function cur(){return S.chats.find(c=>c.id===S.cur)}
+function feedContext(){
+  if(C.feedOn===false) return '';
+  const active=FEED.filter(x=>x.on!==false);
+  if(!active.length) return '';
+  let out='\n\n[Knowledge base — use when relevant]\n';
+  let used=0;
+  for(const d of active){
+    const block='### '+d.title+'\n'+d.body.trim()+'\n\n';
+    if(used+block.length>FEED_MAX_CHARS) break;
+    out+=block; used+=block.length;
+  }
+  return out;
+}
 function SYS(){
   const extra=C.style?(' '+C.style):'';
-  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive.'+extra;
-  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code.'+extra;
-  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something.'+extra;
+  const kb=feedContext();
+  if(S.use==='build') return 'You are Arqen Era. Build mode: when the user wants an app or UI, reply with one short sentence then one complete self-contained HTML file (inline CSS/JS, no external libs) in a single html code block. Polished and responsive.'+extra+kb;
+  if(S.use==='plan') return 'You are Arqen Era. Plan mode: outline steps only, no full code.'+extra+kb;
+  return 'You are Arqen Era. Chat normally. Answer questions and talk naturally. Do NOT generate full HTML apps unless the user clearly asks to build or code something.'+extra+kb;
 }
 function md(t){
   codes=[]; let o='';
@@ -171,7 +201,7 @@ function home(){
   $('#view').innerHTML=`<div class="home"><h1>Describe it.<br><span class="dim">Watch it ship.</span></h1>
   <div class="box"><textarea id="p" rows="2" placeholder="Say hi, ask a question, or describe an app…" enterkeyhint="send"></textarea>
   <div class="row">${modeChips()}<button type="button" class="send" id="send" aria-label="Send">↑</button></div></div>
-  <p class="fine">Ask · Plan · Build</p></div>`;
+  <p class="fine">Ask · Plan · Build${FEED.filter(x=>x.on!==false).length?' · Knowledge on':''}</p></div>`;
   wire();
 }
 function buildChatShell(c){
@@ -201,14 +231,71 @@ function chatsView(){
     <button type="button" style="flex:1;font-weight:600" data-open="${c.id}">${esc(c.title)}</button>
     <button type="button" class="btn" data-del="${c.id}">×</button></div>`).join(''):'<p class="fine">No chats yet.</p>'}</div>`;
 }
+function feedView(){
+  streamTarget=null;
+  $('#ttl').textContent='Data Feed';
+  const list=FEED.length?FEED.map((d,i)=>`<div class="feed-item">
+    <div class="t">${esc(d.title)}</div>
+    <div class="m">${d.on===false?'Off · ':''}${(d.body||'').length} chars · ${new Date(d.t||Date.now()).toLocaleDateString()}</div>
+    <div class="x">${esc((d.body||'').slice(0,220))}</div>
+    <div class="feed-actions">
+      <button type="button" class="btn" data-feed-edit="${i}">Edit</button>
+      <button type="button" class="btn" data-feed-toggle="${i}">${d.on===false?'Enable':'Disable'}</button>
+      <button type="button" class="btn d" data-feed-del="${i}">Delete</button>
+    </div>
+  </div>`).join(''):'<p class="fine" style="text-align:left;margin:12px 0">No documents yet. Paste notes, docs, product info… Arqen will use them in chat.</p>';
+  $('#view').innerHTML=`<div class="pg">
+    <h2>Data Feed</h2>
+    <p class="sub">Feed knowledge to Arqen. Active docs are injected into the model context (up to ~12k chars).</p>
+    <label class="toggle"><input type="checkbox" id="feedOn" ${C.feedOn!==false?'checked':''}> Use knowledge base in chat</label>
+    <div class="sc">
+      <h3>Add document</h3>
+      <input class="in" id="fTitle" placeholder="Title (e.g. Product FAQ)">
+      <textarea class="ta" id="fBody" placeholder="Paste text here…"></textarea>
+      <button type="button" class="btn p" id="fAdd">Add to feed</button>
+    </div>
+    <div class="sc">
+      <h3>Library (${FEED.length})</h3>
+      ${list}
+    </div>
+  </div>`;
+  $('#feedOn').onchange=()=>{C.feedOn=$('#feedOn').checked;saveCfg(C)};
+  $('#fAdd').onclick=()=>{
+    const title=($('#fTitle').value||'').trim()||'Untitled';
+    const body=($('#fBody').value||'').trim();
+    if(!body){alert('Empty document');return}
+    FEED.unshift({id:uid(),title,body,on:true,t:Date.now()});
+    svFeed(FEED); feedView();
+  };
+}
+function feedEditView(i){
+  const d=FEED[i]; if(!d) return feedView();
+  $('#ttl').textContent='Edit document';
+  $('#view').innerHTML=`<div class="pg">
+    <h2>Edit</h2>
+    <input class="in" id="fTitle">
+    <textarea class="ta" id="fBody" style="min-height:220px"></textarea>
+    <button type="button" class="btn p" id="fSave">Save</button>
+    <button type="button" class="btn" id="fCancel" style="margin-left:8px">Cancel</button>
+  </div>`;
+  $('#fTitle').value=d.title;
+  $('#fBody').value=d.body;
+  $('#fSave').onclick=()=>{
+    d.title=($('#fTitle').value||'').trim()||'Untitled';
+    d.body=($('#fBody').value||'').trim();
+    d.t=Date.now();
+    svFeed(FEED); feedView();
+  };
+  $('#fCancel').onclick=()=>feedView();
+}
 function settingsView(){
   streamTarget=null;
   $('#ttl').textContent='Settings';
   $('#view').innerHTML=`<div class="pg"><h2>Settings</h2>
   <div class="sc"><h3>Your instructions</h3>
-    <textarea id="style" style="width:100%;min-height:100px;background:rgba(255,255,255,.05);border:0;border-radius:11px;padding:12px;color:var(--ink);font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--line)" placeholder="Optional tone / preferences…"></textarea>
+    <textarea id="style" class="ta" placeholder="Optional tone / preferences…"></textarea>
   </div>
-  <p class="fine">API & model settings are in Admin (password protected).</p>
+  <p class="fine">API & model → Admin. Knowledge → Data Feed.</p>
   </div>`;
   $('#style').value=C.style||'';
   $('#style').oninput=()=>{C.style=$('#style').value;saveCfg(C)};
@@ -218,10 +305,10 @@ function adminView(){
   $('#ttl').textContent='Admin';
   if(!adminOK){
     $('#view').innerHTML=`<div class="pg lock"><h2>Admin</h2>
-      <p>Only you and your collaborator. Enter the admin password.</p>
+      <p>Only you and your collaborator.</p>
       <input class="in" id="admPass" type="password" placeholder="Password" enterkeyhint="go">
       <button type="button" class="btn p" id="admGo">Unlock</button>
-      <p class="fine" style="margin-top:14px">Default: arqen2026 — change it after unlock.</p>
+      <p class="fine" style="margin-top:14px">Default: arqen2026</p>
     </div>`;
     const go=()=>{
       const v=$('#admPass').value;
@@ -233,34 +320,20 @@ function adminView(){
     return;
   }
   $('#view').innerHTML=`<div class="pg"><h2>Admin</h2>
-  <div class="sc"><h3>Backend API URL</h3>
-    <input class="in" id="apiBase" placeholder="https://….trycloudflare.com/v1" autocomplete="off">
-  </div>
-  <div class="sc"><h3>Model name</h3>
-    <input class="in" id="model" placeholder="arqen" autocomplete="off">
-  </div>
-  <div class="sc"><h3>API key</h3>
-    <input class="in" id="apiKey" placeholder="ollama" autocomplete="off">
-  </div>
-  <div class="sc"><h3>Admin password</h3>
-    <input class="in" id="newPass" type="password" placeholder="New password">
-  </div>
+  <div class="sc"><h3>Backend API URL</h3><input class="in" id="apiBase" autocomplete="off"></div>
+  <div class="sc"><h3>Model name</h3><input class="in" id="model" autocomplete="off"></div>
+  <div class="sc"><h3>API key</h3><input class="in" id="apiKey" autocomplete="off"></div>
+  <div class="sc"><h3>Admin password</h3><input class="in" id="newPass" type="password" placeholder="New password"></div>
   <button type="button" class="btn p" id="admSave">Save</button>
   <button type="button" class="btn" id="admLock" style="margin-left:8px">Lock</button>
-  <p class="fine" style="margin-top:16px;text-align:left">When the Cloudflare tunnel URL changes, update Backend API URL here. Both of you use the same password.</p>
   </div>`;
-  $('#apiBase').value=C.apiBase;
-  $('#model').value=C.model;
-  $('#apiKey').value=C.apiKey;
+  $('#apiBase').value=C.apiBase; $('#model').value=C.model; $('#apiKey').value=C.apiKey;
   $('#admSave').onclick=()=>{
     C.apiBase=$('#apiBase').value.trim().replace(/\/$/,'');
     C.model=$('#model').value.trim()||'arqen';
     C.apiKey=$('#apiKey').value.trim()||'ollama';
-    const np=$('#newPass').value;
-    if(np) C.adminPass=np;
-    saveCfg(C);
-    localStorage.setItem('arqen-api-base',C.apiBase);
-    alert('Saved');
+    const np=$('#newPass').value; if(np) C.adminPass=np;
+    saveCfg(C); localStorage.setItem('arqen-api-base',C.apiBase); alert('Saved');
   };
   $('#admLock').onclick=()=>{adminOK=false;sessionStorage.removeItem('arqen-admin');adminView()};
 }
@@ -324,7 +397,7 @@ async function ask(t){
     m.content=(m.content||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
   }catch(e){
     if(e.name!=='AbortError'){
-      m.content='Could not reach the model.\n\n'+(e.message||'Network error')+'\n\nCheck Admin → Backend API URL (tunnel online?).';
+      m.content='Could not reach the model.\n\n'+(e.message||'Network error')+'\n\nCheck Admin → Backend API URL.';
     }
   }
   busy=false; sv();
@@ -339,6 +412,12 @@ document.addEventListener('click',e=>{
   if(cp){navigator.clipboard.writeText(codes[+cp.dataset.copy]||''); cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy',1000); return}
   const pv=e.target.closest('[data-prev]');
   if(pv){previewHtml=codes[+pv.dataset.prev]||''; $('#modal').classList.add('on'); $('#mf').srcdoc=previewHtml; $('#mName').value=''; return}
+  const fe=e.target.closest('[data-feed-edit]');
+  if(fe){feedEditView(+fe.dataset.feedEdit);return}
+  const ft=e.target.closest('[data-feed-toggle]');
+  if(ft){const i=+ft.dataset.feedToggle; FEED[i].on=FEED[i].on===false?true:false; svFeed(FEED); feedView(); return}
+  const fd=e.target.closest('[data-feed-del]');
+  if(fd){if(confirm('Delete this document?')){FEED.splice(+fd.dataset.feedDel,1); svFeed(FEED); feedView()} return}
   const b=e.target.closest('[data-go],[data-open],[data-del],#newChat,#burger,#scrim,#mX,#mDl');
   if(!b) return;
   if(b.id==='newChat'){S.cur=null;sv();home();side();closeSide()}
@@ -348,6 +427,7 @@ document.addEventListener('click',e=>{
   if(b.id==='mDl'&&previewHtml){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([previewHtml],{type:'text/html'}));a.download=($('#mName').value||'project')+'.html';a.click()}
   if(b.dataset.go==='home'){S.cur=null;home();side();closeSide()}
   if(b.dataset.go==='chats'){chatsView();closeSide()}
+  if(b.dataset.go==='feed'){feedView();closeSide()}
   if(b.dataset.go==='settings'){settingsView();closeSide()}
   if(b.dataset.go==='admin'){adminView();closeSide()}
   if(b.dataset.open){S.cur=b.dataset.open;sv();buildChatShell(cur());renderMsgs(true);side();closeSide()}
